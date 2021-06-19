@@ -11,10 +11,17 @@ components:
         - id
       properties:
         id:
-          type: integer
-          format: int64
-          minimum: 0
+          $ref: '#/components/schemas/SubjectId'
         name:
-          type: string
-          maxLength: 200
+          $ref: '#/components/schemas/SubjectName'
+    SubjectId:
+      type: integer
+      format: int64
+      minimum: 0
+    SubjectName:
+      type: string
+      maxLength: 200
+    Error:
+      type: string
+      maxLength: 200
 

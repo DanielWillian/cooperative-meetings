@@ -1,0 +1,124 @@
+openapi: "3.0.3"
+info:
+  title: "Subject api"
+  version: "1.0"
+paths:
+  /subjects:
+    get:
+      summary: Gets all subjects
+      operationId: getSubjects
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+    post:
+      summary: Adds subject
+      operationId: addSubject
+      requestBody:
+        description: Subject to be added
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+      responses:
+        "201":
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+          headers:
+            Location:
+              description: Location of newly created subject
+              schema:
+                type: string
+        "400":
+          description: Wrong format
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Error"
+        "409":
+          description: Subject already exists
+          headers:
+            Location:
+              description: Location of existing subject
+              schema:
+                type: string
+    put:
+      summary: Updates subject
+      operationId: updateSubject
+      requestBody:
+        description: Subject to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+      responses:
+        "200":
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+        "400":
+          description: Wrong format
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Error"
+        "404":
+          description: Subject not found
+  /subjects/{id}:
+    get:
+      summary: Gets subject by id
+      operationId: getSubjectById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "./subject-definitions.yaml#/components/schemas/SubjectId"
+      responses:
+        "200":
+          description: Subject found
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Subject"
+        "400":
+          description: Wrong format
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Error"
+        "404":
+          description: Subject not found
+    delete:
+      summary: Deletes subject by id
+      operationId: deleteSubjectById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "./subject-definitions.yaml#/components/schemas/SubjectId"
+      responses:
+        "204":
+          description: Subject deleted
+        "400":
+          description: Wrong format
+          content:
+            application/json:
+              schema:
+                $ref: "./subject-definitions.yaml#/components/schemas/Error"
+        "404":
+          description: Subject not found
+

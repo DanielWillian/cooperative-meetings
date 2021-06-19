@@ -62,6 +62,29 @@
               </configOptions>
             </configuration>
           </execution>
+          <execution>
+            <id>subject-api</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/subject-api.yaml</inputSpec>
+              <generatorName>spring</generatorName>
+              <apiPackage>org.company.demo.subject.api</apiPackage>
+              <modelPackage>org.company.demo.subject.model</modelPackage>
+              <generateModels>false</generateModels>
+              <generateApiTests>false</generateApiTests>
+              <generateModelTests>false</generateModelTests>
+              <skipOperationExample>false</skipOperationExample>
+              <output>${project.build.directory}/gen</output>
+              <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+              <configOptions>
+                <delegatePattern>true</delegatePattern>
+                <sourceFolder>openapi</sourceFolder>
+                <skipOverwrite>false</skipOverwrite>
+              </configOptions>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
