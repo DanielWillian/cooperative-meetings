@@ -15,6 +15,7 @@
 
   <modules>
     <module>subject-jpa-api</module>
+    <module>subject-ws-api</module>
   </modules>
 
 </project>
