@@ -49,7 +49,7 @@
             <configuration>
               <inputSpec>${project.basedir}/src/main/resources/subject-definitions.yaml</inputSpec>
               <generatorName>spring</generatorName>
-              <modelPackage>org.company.demo.subject.model</modelPackage>
+              <modelPackage>org.cooperative.subject.api.model</modelPackage>
               <generateApi>false</generateApi>
               <generateSupportingFiles>false</generateSupportingFiles>
               <generateApiTests>false</generateApiTests>
@@ -70,8 +70,8 @@
             <configuration>
               <inputSpec>${project.basedir}/src/main/resources/subject-api.yaml</inputSpec>
               <generatorName>spring</generatorName>
-              <apiPackage>org.company.demo.subject.api</apiPackage>
-              <modelPackage>org.company.demo.subject.model</modelPackage>
+              <apiPackage>org.cooperative.subject.api</apiPackage>
+              <modelPackage>org.cooperative.subject.api.model</modelPackage>
               <generateModels>false</generateModels>
               <generateApiTests>false</generateApiTests>
               <generateModelTests>false</generateModelTests>

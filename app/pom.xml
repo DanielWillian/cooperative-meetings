@@ -65,6 +65,11 @@
           <artifactId>openapi-generator-maven-plugin</artifactId>
           <version>${openapi.generator.plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring.boot.dependencies.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -98,6 +103,7 @@
 
   <modules>
     <module>components</module>
+    <module>entrypoints</module>
   </modules>
 
 </project>
