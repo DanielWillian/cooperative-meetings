@@ -6,18 +6,18 @@
 
   <parent>
     <groupId>org.company.demo</groupId>
-    <artifactId>cooperative-meetings-app</artifactId>
+    <artifactId>cooperative-meetings-components</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>cooperative-meetings-components</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>subject-api</artifactId>
 
-  <modules>
-    <module>subject-api</module>
-    <module>subject-lib</module>
-    <module>subject-jpa-api</module>
-    <module>subject-ws-api</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
 </project>
