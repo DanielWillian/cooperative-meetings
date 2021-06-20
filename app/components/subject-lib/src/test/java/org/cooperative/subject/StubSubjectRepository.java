@@ -20,7 +20,8 @@ public class StubSubjectRepository implements SubjectRepository {
 
     @Override
     public <S extends Subject> S save(S s) {
-        if (existsById(s.getId())) subjects.add(s);
+        if (existsById(s.getId())) deleteById(s.getId());
+        subjects.add(s);
         return s;
     }
 
@@ -39,10 +40,7 @@ public class StubSubjectRepository implements SubjectRepository {
 
     @Override
     public boolean existsById(Long aLong) {
-        return subjects.stream()
-                .filter(s -> s.getId().equals(aLong))
-                .findAny()
-                .isEmpty();
+        return findById(aLong).isPresent();
     }
 
     @Override

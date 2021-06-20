@@ -28,9 +28,9 @@ public class SubjectServiceTest {
     @Test
     public void testCreateSubjectSuccess() {
         subjectService.createSubject(Subject.of(0, "name"));
-        Optional<Subject> optionalSubject = subjectService.getSubjectById(0);
+        Optional<org.cooperative.subject.jpa.Subject> optionalSubject = subjectRepository.findById(0L);
         assertTrue(optionalSubject.isPresent());
-        assertEquals(Subject.of(0, "name"), optionalSubject.get());
+        assertEquals(org.cooperative.subject.jpa.Subject.of(0L, "name"), optionalSubject.get());
     }
 
     @Test
@@ -50,9 +50,9 @@ public class SubjectServiceTest {
     public void testUpdateSubjectSuccess() {
         subjectService.createSubject(Subject.of(0, "name"));
         subjectService.updateSubject(Subject.of(0, "updated"));
-        Optional<Subject> optionalSubject = subjectService.getSubjectById(0);
+        Optional<org.cooperative.subject.jpa.Subject> optionalSubject = subjectRepository.findById(0L);
         assertTrue(optionalSubject.isPresent());
-        assertEquals(Subject.of(0, "updated"), optionalSubject.get());
+        assertEquals(org.cooperative.subject.jpa.Subject.of(0L, "updated"), optionalSubject.get());
     }
 
     @Test
@@ -76,8 +76,8 @@ public class SubjectServiceTest {
 
     @Test
     public void testGetAllSubjectsSomeSubjects() {
-        subjectService.createSubject(Subject.of(0, "name0"));
-        subjectService.createSubject(Subject.of(1, "name1"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name0"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(1L, "name1"));
         List<Subject> allSubjects = subjectService.getAllSubjects()
                 .collect(Collectors.toList());
         Subject[] expectedSubjects = new Subject[] { Subject.of(0, "name0"), Subject.of(1, "name1") };
@@ -86,7 +86,7 @@ public class SubjectServiceTest {
 
     @Test
     public void testGetSubjectByIdNotFound() {
-        subjectService.createSubject(Subject.of(0, "name"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name"));
         List<Subject> allSubjects = subjectService.getAllSubjects()
                 .collect(Collectors.toList());
         assertFalse(allSubjects.isEmpty());
@@ -102,7 +102,7 @@ public class SubjectServiceTest {
 
     @Test
     public void testGetSubjectByNameNoSubjects() {
-        subjectService.createSubject(Subject.of(0, "nameA"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "nameA"));
         List<Subject> allSubjects = subjectService.getAllSubjects()
                 .collect(Collectors.toList());
         assertFalse(allSubjects.isEmpty());
@@ -113,9 +113,9 @@ public class SubjectServiceTest {
 
     @Test
     public void testGetSubjectByNameSomeSubjects() {
-        subjectService.createSubject(Subject.of(0, "nameA"));
-        subjectService.createSubject(Subject.of(1, "nameB"));
-        subjectService.createSubject(Subject.of(2, "nameA"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "nameA"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(1L, "nameB"));
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(2L, "nameA"));
         List<Subject> subjects = subjectService.getSubjectByName("nameA")
                 .collect(Collectors.toList());
         Subject[] expectedSubjects = new Subject[] { Subject.of(0, "nameA"), Subject.of(2, "nameA") };
@@ -124,10 +124,7 @@ public class SubjectServiceTest {
 
     @Test
     public void testDeleteSubjectSuccess() {
-        subjectService.createSubject(Subject.of(0, "name"));
-        Optional<Subject> createdSubject = subjectService.getSubjectById(0);
-        assertTrue(createdSubject.isPresent());
-        assertEquals(Subject.of(0, "name"), createdSubject.get());
+        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name"));
         subjectService.deleteSubject(0);
         Optional<Subject> deletedSubject = subjectService.getSubjectById(0);
         assertFalse(deletedSubject.isPresent());
