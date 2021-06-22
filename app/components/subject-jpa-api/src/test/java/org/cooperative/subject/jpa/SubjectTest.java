@@ -1,7 +1,10 @@
 package org.cooperative.subject.jpa;
 
-import org.junit.Assert;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class SubjectTest {
 
@@ -11,22 +14,22 @@ public class SubjectTest {
                 .id(1L)
                 .name("name")
                 .build();
-        Assert.assertEquals(Long.valueOf(1L), subject.getId());
-        Assert.assertEquals("name", subject.getName());
+        assertEquals(Long.valueOf(1L), subject.getId());
+        assertEquals("name", subject.getName());
     }
 
     @Test
     public void equalsTrueTest() {
-        Assert.assertEquals(Subject.of(1L, "name"), Subject.of(1L, "name"));
+        assertEquals(Subject.of(1L, "name"), Subject.of(1L, "name"));
     }
 
     @Test
     public void equalsFalseTest() {
-        Assert.assertNotEquals(Subject.of(1L, "name"), Subject.of(2L, "name"));
+        assertNotEquals(Subject.of(1L, "name"), Subject.of(2L, "name"));
     }
 
     @Test
     public void hashCodeEqualsTest() {
-        Assert.assertEquals(Subject.of(1L, "name").hashCode(), Subject.of(1L, "name").hashCode());
+        assertEquals(Subject.of(1L, "name").hashCode(), Subject.of(1L, "name").hashCode());
     }
 }
