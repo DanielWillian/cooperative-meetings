@@ -63,7 +63,7 @@ paths:
               $ref: "./subject-definitions.yaml#/components/schemas/Subject"
       responses:
         "200":
-          description: Subject created
+          description: Subject updated
           content:
             application/json:
               schema:

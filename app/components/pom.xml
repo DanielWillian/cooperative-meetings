@@ -18,6 +18,7 @@
     <module>subject-lib</module>
     <module>subject-jpa-api</module>
     <module>subject-ws-api</module>
+    <module>subject-ws-impl</module>
   </modules>
 
 </project>
