@@ -57,8 +57,10 @@
               <skipOperationExample>false</skipOperationExample>
               <output>${project.build.directory}/gen</output>
               <configOptions>
+                <serializableModel>true</serializableModel>
                 <sourceFolder>openapi</sourceFolder>
                 <skipOverwrite>false</skipOverwrite>
+                <useBeanValidation>true</useBeanValidation>
               </configOptions>
             </configuration>
           </execution>
