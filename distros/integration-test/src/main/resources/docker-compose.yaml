@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  app:
+    image: openjdk:11.0.11-jre-slim
+    networks:
+      - database
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - "${APP_JAR_HOME:-./app}:/opt/app"
+    command: [ "java", "-jar", "/opt/app/${APP_JAR_NAME:-web-app.jar}" ]
+    environment:
+      PGHOST: "postgres"
+      PGPORT: "5432"
+      PGUSER: "postgres"
+      PGPASSWORD: "${PGPASSWORD:-postgres}"
+      PGDATABASE: ""
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:13.3-alpine
+    networks:
+      - database
+    environment:
+      POSTGRES_PASSWORD: "${PGPASSWORD:-postgres}"
+networks:
+  database: {}
