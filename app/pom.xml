@@ -17,6 +17,8 @@
     <spring.boot.dependencies.version>2.5.1</spring.boot.dependencies.version>
     <jacoco.maven.plugin.version>0.8.7</jacoco.maven.plugin.version>
     <openapi.generator.plugin.version>5.1.1</openapi.generator.plugin.version>
+    <maven.resources.plugin.version>3.2.0</maven.resources.plugin.version>
+    <maven.dependency.plugin.version>3.2.0</maven.dependency.plugin.version>
     <jackson.databind.nullable.version>0.2.1</jackson.databind.nullable.version>
     <io.springfox.version>3.0.0</io.springfox.version>
   </properties>
@@ -85,6 +87,16 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring.boot.dependencies.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>${maven.resources.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven.dependency.plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
