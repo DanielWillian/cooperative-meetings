@@ -33,9 +33,23 @@
     </pluginManagement>
   </build>
 
-  <modules>
-    <module>app</module>
-    <module>distros</module>
-  </modules>
+  <profiles>
+    <profile>
+      <id>tests</id>
+      <modules>
+        <module>tests</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>default</id>
+      <activation>
+         <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>app</module>
+        <module>distros</module>
+      </modules>
+    </profile>
+  </profiles>
 
 </project>
