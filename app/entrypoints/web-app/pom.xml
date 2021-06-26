@@ -16,12 +16,10 @@
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-ws-impl</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-jpa-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

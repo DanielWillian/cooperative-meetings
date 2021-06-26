@@ -16,12 +16,10 @@
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-jpa-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

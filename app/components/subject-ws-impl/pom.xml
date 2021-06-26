@@ -16,12 +16,10 @@
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-ws-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>subject-lib</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
