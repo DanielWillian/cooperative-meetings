@@ -19,6 +19,7 @@
     <module>subject-jpa-api</module>
     <module>subject-ws-api</module>
     <module>subject-ws-impl</module>
+    <module>poll-ws-api</module>
   </modules>
 
 </project>
