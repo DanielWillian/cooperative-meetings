@@ -2,13 +2,13 @@ package org.cooperative.subject;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.ToString;
 import lombok.Value;
+import lombok.With;
 
 @AllArgsConstructor(staticName = "of")
 @Value
 @Builder
-@ToString
+@With
 public class Subject {
     long id;
     String name;
