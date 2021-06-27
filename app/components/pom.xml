@@ -20,6 +20,7 @@
     <module>subject-ws-api</module>
     <module>subject-ws-impl</module>
     <module>poll-api</module>
+    <module>poll-lib</module>
     <module>poll-jpa-api</module>
     <module>poll-ws-api</module>
   </modules>
