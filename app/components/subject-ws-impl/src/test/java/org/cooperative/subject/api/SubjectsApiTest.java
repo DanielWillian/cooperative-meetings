@@ -1,6 +1,7 @@
 package org.cooperative.subject.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cooperative.subject.StubSubjectService;
 import org.cooperative.subject.SubjectService;
 import org.cooperative.subject.api.model.Subject;
 import org.junit.jupiter.api.AfterEach;

@@ -19,6 +19,7 @@
     <openapi.generator.plugin.version>5.1.1</openapi.generator.plugin.version>
     <maven.resources.plugin.version>3.2.0</maven.resources.plugin.version>
     <maven.dependency.plugin.version>3.2.0</maven.dependency.plugin.version>
+    <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
     <jackson.databind.nullable.version>0.2.1</jackson.databind.nullable.version>
     <io.springfox.version>3.0.0</io.springfox.version>
   </properties>
@@ -56,6 +57,13 @@
         <groupId>org.company.demo</groupId>
         <artifactId>subject-ws-impl</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.company.demo</groupId>
+        <artifactId>subject-stubs</artifactId>
+        <type>test-jar</type>
+        <version>${project.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.openapitools</groupId>
@@ -98,6 +106,11 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <version>${maven.dependency.plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven.jar.plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -129,6 +142,7 @@
   <modules>
     <module>components</module>
     <module>entrypoints</module>
+    <module>utilities</module>
   </modules>
 
 </project>
