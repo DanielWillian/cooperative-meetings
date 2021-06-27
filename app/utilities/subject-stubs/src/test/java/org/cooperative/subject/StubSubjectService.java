@@ -1,10 +1,5 @@
-package org.cooperative.subject.api;
+package org.cooperative.subject;
 
-import org.cooperative.subject.Subject;
-import org.cooperative.subject.SubjectAlreadyExistsException;
-import org.cooperative.subject.SubjectNotFoundException;
-import org.cooperative.subject.SubjectService;
-import org.cooperative.subject.SubjectWrongFormatException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

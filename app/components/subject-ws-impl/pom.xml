@@ -27,6 +27,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>subject-stubs</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
