@@ -19,6 +19,10 @@
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
+      <artifactId>subject-lib</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
       <artifactId>subject-jpa-api</artifactId>
     </dependency>
     <dependency>
