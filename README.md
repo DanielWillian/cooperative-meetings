@@ -4,6 +4,15 @@ cooperative-meetings is a demo app exposing REST APIs for managing meetings of a
 
 It uses OpenAPI as specification and implements it using Spring Boot.
 
+Current features available:
+
+- CRUD operations for subjects
+- CRUD operations for polls of subjects
+
+Features to be introduced:
+
+- CRUD operations for voting on polls of subjects
+
 ## Requirements
 Compiling, running and testing the application have different requirements.
 
