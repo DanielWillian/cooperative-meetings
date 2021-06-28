@@ -124,6 +124,12 @@ public class PollServiceDefault implements PollService {
         if (poll.getStartDate() != null) currentPoll.setStartDate(poll.getStartDate());
         if (poll.getEndDate() != null) currentPoll.setEndDate(poll.getEndDate());
 
+        if (!currentPoll.getStartDate().isBefore(currentPoll.getEndDate())) {
+            throw PollValidationException.builder()
+                    .validation(Validation.END_DATE_EARLIER_THAN_START_DATE)
+                    .build();
+        }
+
         pollRepository.save(currentPoll);
 
         log.info("Updated poll: {}", currentPoll);
@@ -140,10 +146,6 @@ public class PollServiceDefault implements PollService {
         if (poll.getSubjectId() == null) validations.add(Validation.MISSING_SUBJECT_ID);
         if (poll.getName() != null && poll.getName().length() > NAME_MAX_LENGTH) {
             validations.add(Validation.NAME_TOO_LONG);
-        }
-        if (poll.getStartDate() != null && poll.getEndDate() != null &&
-                !poll.getStartDate().isBefore(poll.getEndDate())) {
-            validations.add(Validation.END_DATE_EARLIER_THAN_START_DATE);
         }
         if (!validations.isEmpty()) {
             throw PollValidationException.builder()
@@ -165,7 +167,6 @@ public class PollServiceDefault implements PollService {
         if (pollRepository.findBySubject_IdAndId(subjectId, id).isEmpty()) {
             throw new PollNotFoundException();
         }
-
 
         pollRepository.deleteById(id);
 

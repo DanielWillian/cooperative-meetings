@@ -26,6 +26,14 @@
       <artifactId>subject-jpa-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>poll-ws-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>poll-lib</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>

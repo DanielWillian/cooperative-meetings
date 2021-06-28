@@ -202,21 +202,6 @@ public class PollsApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void testAddPollAlreadyExists() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
-        OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
-
-        service.createPoll(Poll.of(1L, "poll", startTime, endDate, 1L));
-
-        mockMvc.perform(MockMvcRequestBuilders
-                .post(URI.create("/subjects/1/polls"))
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollCreate("poll", endDate))))
-                .andExpect(status().isConflict());
-    }
-
     private PollCreate createPollCreate(String name, OffsetDateTime endDate) {
         PollCreate pollCreate = new PollCreate();
         pollCreate.setName(name);
