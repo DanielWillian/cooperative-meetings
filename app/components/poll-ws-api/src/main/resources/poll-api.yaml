@@ -56,10 +56,6 @@ paths:
                 type: string
         "400":
           description: Wrong format
-          content:
-            application/json:
-              schema:
-                $ref: "./poll-definitions.yaml#/components/schemas/Error"
         "409":
           description: Poll already exists
           headers:
@@ -94,10 +90,6 @@ paths:
                 $ref: "./poll-definitions.yaml#/components/schemas/PollResponse"
         "400":
           description: Wrong format
-          content:
-            application/json:
-              schema:
-                $ref: "./poll-definitions.yaml#/components/schemas/Error"
         "404":
           description: Poll not found
   /subjects/{subjectId}/polls/{pollId}:
@@ -124,12 +116,6 @@ paths:
             application/json:
               schema:
                 $ref: "./poll-definitions.yaml#/components/schemas/PollResponse"
-        "400":
-          description: Wrong format
-          content:
-            application/json:
-              schema:
-                $ref: "./poll-definitions.yaml#/components/schemas/Error"
         "404":
           description: Poll not found
     delete:
@@ -151,12 +137,6 @@ paths:
       responses:
         "204":
           description: Poll deleted
-        "400":
-          description: Wrong format
-          content:
-            application/json:
-              schema:
-                $ref: "./poll-definitions.yaml#/components/schemas/Error"
         "404":
           description: Poll not found
 
