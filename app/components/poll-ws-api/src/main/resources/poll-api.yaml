@@ -56,13 +56,6 @@ paths:
                 type: string
         "400":
           description: Wrong format
-        "409":
-          description: Poll already exists
-          headers:
-            Location:
-              description: Location of existing poll
-              schema:
-                type: string
     put:
       tags:
         - Polls
