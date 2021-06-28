@@ -11,6 +11,7 @@ import org.cooperative.subject.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 public class PollServiceDefault implements PollService {
 
     private static final int NAME_MAX_LENGTH = 200;
+    private static final Duration DEFAULT_END_DURATION = Duration.ofMinutes(1);
     private final PollRepository pollRepository;
     private final SubjectService subjectService;
 
@@ -34,6 +36,9 @@ public class PollServiceDefault implements PollService {
     public Poll createPoll(Poll poll) {
         log.trace("ENTRY - poll: {}", poll);
         validatePollForCreate(poll);
+        if (poll.getEndDate() == null) {
+            poll = poll.withEndDate(poll.getStartDate().plus(DEFAULT_END_DURATION));
+        }
         Subject subject = subjectService.getSubjectById(poll.getSubjectId())
                 .orElseThrow(() -> new SubjectNotFoundException());
 
@@ -57,7 +62,6 @@ public class PollServiceDefault implements PollService {
     private void validatePollForCreate(Poll poll) {
         List<Validation> validations = new ArrayList<>();
         if (poll.getStartDate() == null) validations.add(Validation.MISSING_START_DATE);
-        if (poll.getEndDate() == null) validations.add(Validation.MISSING_END_DATE);
         if (poll.getSubjectId() == null) validations.add(Validation.MISSING_SUBJECT_ID);
         if (poll.getName() != null && poll.getName().length() > NAME_MAX_LENGTH) {
             validations.add(Validation.NAME_TOO_LONG);
@@ -117,8 +121,8 @@ public class PollServiceDefault implements PollService {
                 .orElseThrow(PollNotFoundException::new);
 
         currentPoll.setName(poll.getName());
-        if (poll.getStartDate() == null) currentPoll.setStartDate(poll.getStartDate());
-        if (poll.getEndDate() == null) currentPoll.setEndDate(poll.getEndDate());
+        if (poll.getStartDate() != null) currentPoll.setStartDate(poll.getStartDate());
+        if (poll.getEndDate() != null) currentPoll.setEndDate(poll.getEndDate());
 
         pollRepository.save(currentPoll);
 
