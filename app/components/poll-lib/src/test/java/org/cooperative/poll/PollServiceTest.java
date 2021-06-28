@@ -4,6 +4,7 @@ import org.cooperative.poll.exception.PollNotFoundException;
 import org.cooperative.poll.exception.PollValidationException;
 import org.cooperative.poll.exception.Validation;
 import org.cooperative.poll.jpa.PollRepository;
+import org.cooperative.poll.jpa.StubPollRepository;
 import org.cooperative.subject.Subject;
 import org.cooperative.subject.StubSubjectService;
 import org.cooperative.subject.SubjectNotFoundException;
@@ -80,10 +81,15 @@ public class PollServiceTest {
 
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(null, "poll", startTime, null, 1L);
-        PollValidationException exception = assertThrows(
-                PollValidationException.class, () -> pollService.createPoll(poll));
 
-        assertThat(exception.getValidations(), contains(Validation.MISSING_END_DATE));
+        Poll returnedPoll = pollService.createPoll(poll);
+        Poll expectedPoll = poll.withId(returnedPoll.getId())
+                .withEndDate(startTime.plus(Duration.ofMinutes(1)));
+        assertEquals(expectedPoll, returnedPoll);
+
+        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
+        assertFalse(optional.isEmpty());
+        assertEquals(mapToJpa(expectedPoll), optional.get());
     }
 
     @Test
@@ -334,7 +340,7 @@ public class PollServiceTest {
 
         Poll poll = Poll.of(1L, "poll", startTime, null, 1L);
         Poll returnedPoll = pollService.updatePoll(poll);
-        Poll expectedPoll = poll.withStartDate(returnedPoll.getStartDate());
+        Poll expectedPoll = poll.withEndDate(returnedPoll.getEndDate());
         assertEquals(expectedPoll, returnedPoll);
 
         Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
