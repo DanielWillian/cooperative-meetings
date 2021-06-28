@@ -117,7 +117,8 @@ public class PollsApiDefault implements PollsApiDelegate {
     public ResponseEntity<PollResponse> updatePoll(Long subjectId, PollUpdate pollUpdate) {
         try {
             log.trace("ENTRY - subjectId: {}, pollUpdate: {}", subjectId, pollUpdate);
-            Poll currentPoll = pollService.getPollByIdAndSubjectId(subjectId, pollUpdate.getId())
+            if (pollUpdate.getId() == null) throw PollValidationException.builder().build();
+            Poll currentPoll = pollService.getPollByIdAndSubjectId(pollUpdate.getId(), subjectId)
                     .orElseThrow(PollNotFoundException::new);
 
             Poll.PollBuilder builder = Poll.builder()
