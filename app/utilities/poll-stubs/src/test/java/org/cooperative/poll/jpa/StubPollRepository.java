@@ -1,13 +1,13 @@
-package org.cooperative.poll;
+package org.cooperative.poll.jpa;
 
-import org.cooperative.poll.jpa.Poll;
-import org.cooperative.poll.jpa.PollRepository;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Component
 public class StubPollRepository implements PollRepository {
 
     List<Poll> polls = new ArrayList<>();
@@ -101,5 +101,6 @@ public class StubPollRepository implements PollRepository {
     @Override
     public void deleteAll() {
         polls.clear();
+        nextId = 1;
     }
 }
