@@ -181,7 +181,7 @@ check_app_up() {
 }
 
 test_app() {
-  mvn -f "${SCRIPT_DIR}/pom.xml" -P tests clean test
+  mvn -f "${SCRIPT_DIR}/pom.xml" -P tests clean test "-Dkarate.options=--tags ~@ignore"
 }
 
 undeploy_app() {
