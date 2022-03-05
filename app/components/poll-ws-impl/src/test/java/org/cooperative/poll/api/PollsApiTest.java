@@ -4,9 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cooperative.poll.Poll;
 import org.cooperative.poll.PollService;
 import org.cooperative.poll.PollServiceDefault;
-import org.cooperative.poll.api.model.PollCreate;
-import org.cooperative.poll.api.model.PollResponse;
-import org.cooperative.poll.api.model.PollUpdate;
 import org.cooperative.poll.jpa.PollRepository;
 import org.cooperative.poll.jpa.StubPollRepository;
 import org.cooperative.subject.StubSubjectService;
@@ -14,15 +11,20 @@ import org.cooperative.subject.Subject;
 import org.cooperative.subject.SubjectService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import java.net.URI;
 import java.time.Duration;
@@ -32,7 +34,6 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,17 +42,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PollsApiController.class)
+@ExtendWith(SpringExtension.class)
+@WebFluxTest(PollsApiController.class)
 public class PollsApiTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @Autowired
     private ObjectMapper mapper;
-
-    @Autowired
-    private PollsApiDelegate pollsApiDelegate;
 
     @Autowired
     private PollService service;
@@ -70,13 +69,8 @@ public class PollsApiTest {
     @Configuration
     public static class TestConfig {
         @Bean
-        public PollsApi pollsApiController(PollsApiDelegate delegate) {
-            return new PollsApiController(delegate);
-        }
-
-        @Bean
-        public PollsApiDelegate pollsApiDelegate(PollService service) {
-            return new PollsApiDefault(service);
+        public PollsApiController pollsApiController(PollService service) {
+            return new PollsApiController(service);
         }
 
         @Bean
@@ -110,11 +104,12 @@ public class PollsApiTest {
     public void testGetPollsNoPolls() throws Exception {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .get(URI.create("/subjects/1/polls"))
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+        webTestClient.get()
+                .uri(URI.create("/subjects/1/polls"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(PollResponse.class).hasSize(0);
     }
 
     @Test
@@ -123,14 +118,14 @@ public class PollsApiTest {
         service.createPoll(Poll.of(1L, "poll1", startTime, endTime, 1L));
         service.createPoll(Poll.of(2L, "poll2", startTime, endTime, 1L));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .get(URI.create("/subjects/1/polls"))
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].id", containsInAnyOrder(1, 2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("poll1", "poll2")))
-                .andExpect(jsonPath("$[*].endDate",
-                        containsInAnyOrder(endTimeString, endTimeString)));
+        webTestClient.get()
+                .uri(URI.create("/subjects/1/polls"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(PollResponse.class)
+                        .contains(PollResponse.of(1L, "poll1", endTime),
+                                PollResponse.of(2L, "poll2", endTime));
     }
 
     @Test
@@ -139,18 +134,19 @@ public class PollsApiTest {
 
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
 
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
-                .post(URI.create("/subjects/1/polls"))
+        PollResponse pollResponse = webTestClient.post()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollCreate("poll", endDate))))
-                .andExpect(status().isCreated())
-                .andExpect(header().string(HttpHeaders.LOCATION, "/subjects/1/polls/1"))
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("poll")))
-                .andReturn();
-        PollResponse pollResponse = mapper.readValue(mvcResult.getResponse().getContentAsString(),
-                PollResponse.class);
+                .body(BodyInserters.fromValue(PollCreate.of("poll", endDate)))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().location("/subjects/1/polls/1")
+                .returnResult(PollResponse.class)
+                .getResponseBody()
+                .blockFirst();
+        assertEquals(1, pollResponse.getId());
+        assertEquals("poll", pollResponse.getName());
         assertEquals(endDate, pollResponse.getEndDate());
 
         Optional<Poll> optional = service.getPollByIdAndSubjectId(1L, 1L);
@@ -165,18 +161,19 @@ public class PollsApiTest {
     public void testAddPollNoEndDate() throws Exception {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
 
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
-                .post(URI.create("/subjects/1/polls"))
+        PollResponse pollResponse = webTestClient.post()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollCreate("poll", null))))
-                .andExpect(status().isCreated())
-                .andExpect(header().string(HttpHeaders.LOCATION, "/subjects/1/polls/1"))
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("poll")))
-                .andReturn();
-        PollResponse pollResponse = mapper.readValue(mvcResult.getResponse().getContentAsString(),
-                PollResponse.class);
+                .body(BodyInserters.fromValue(PollCreate.of("poll", null)))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().location("/subjects/1/polls/1")
+                .returnResult(PollResponse.class)
+                .getResponseBody()
+                .blockFirst();
+        assertEquals(1, pollResponse.getId());
+        assertEquals("poll", pollResponse.getName());
         assertFalse(pollResponse.getEndDate().isAfter(
                 OffsetDateTime.now().plus(Duration.ofMinutes(1))));
 
@@ -194,19 +191,13 @@ public class PollsApiTest {
 
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).minus(Duration.ofHours(1));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .post(URI.create("/subjects/1/polls"))
+        webTestClient.post()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollCreate("poll", endDate))))
-                .andExpect(status().isBadRequest());
-    }
-
-    private PollCreate createPollCreate(String name, OffsetDateTime endDate) {
-        PollCreate pollCreate = new PollCreate();
-        pollCreate.setName(name);
-        pollCreate.setEndDate(endDate);
-        return pollCreate;
+                .body(BodyInserters.fromValue(PollCreate.of("poll", endDate)))
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     @Test
@@ -216,17 +207,18 @@ public class PollsApiTest {
 
         service.createPoll(Poll.of(1L, "poll", startTime, endDate, 1L));
 
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
-                .put(URI.create("/subjects/1/polls"))
+        PollResponse pollResponse = webTestClient.put()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollUpdate(1L, "poll updated", endDate))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("poll updated")))
-                .andReturn();
-        PollResponse pollResponse = mapper.readValue(mvcResult.getResponse().getContentAsString(),
-                PollResponse.class);
+                .body(BodyInserters.fromValue(PollUpdate.of(1L, "poll updated", endDate)))
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(PollResponse.class)
+                .getResponseBody()
+                .blockFirst();
+        assertEquals(1L, pollResponse.getId());
+        assertEquals("poll updated", pollResponse.getName());
         assertEquals(endDate, pollResponse.getEndDate());
 
         Optional<Poll> optional = service.getPollByIdAndSubjectId(1L, 1L);
@@ -244,13 +236,13 @@ public class PollsApiTest {
 
         service.createPoll(Poll.of(1L, "poll", startTime, endDate, 1L));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .put(URI.create("/subjects/1/polls"))
+        webTestClient.put()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollUpdate(
-                        1L, "poll", startTime.minus(Duration.ofDays(1))))))
-                .andExpect(status().isBadRequest());
+                .body(BodyInserters.fromValue(PollUpdate.of(1L, "poll", startTime.minus(Duration.ofDays(1)))))
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     @Test
@@ -258,20 +250,13 @@ public class PollsApiTest {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .put(URI.create("/subjects/1/polls"))
+        webTestClient.put()
+                .uri(URI.create("/subjects/1/polls"))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(createPollUpdate(1L, "name", endDate))))
-                .andExpect(status().isNotFound());
-    }
-
-    private PollUpdate createPollUpdate(Long id, String name, OffsetDateTime endDate) {
-        PollUpdate pollCreate = new PollUpdate();
-        pollCreate.setId(id);
-        pollCreate.setName(name);
-        pollCreate.setEndDate(endDate);
-        return pollCreate;
+                .body(BodyInserters.fromValue(PollUpdate.of(1L, "poll", endDate)))
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -279,23 +264,28 @@ public class PollsApiTest {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .get(URI.create("/subjects/1/polls/1"))
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("poll")))
-                .andExpect(jsonPath("$.endDate", is(endTimeString)));
+        PollResponse pollResponse = webTestClient.get()
+                .uri(URI.create("/subjects/1/polls/1"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(PollResponse.class)
+                .getResponseBody()
+                .blockFirst();
+        assertEquals(1L, pollResponse.getId());
+        assertEquals("poll", pollResponse.getName());
+        assertEquals(endTime, pollResponse.getEndDate());
     }
 
     @Test
     public void testGetPollNotFound() throws Exception {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .get(URI.create("/subjects/1/polls/1"))
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        webTestClient.get()
+                .uri(URI.create("/subjects/1/polls/1"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -303,17 +293,19 @@ public class PollsApiTest {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .delete(URI.create("/subjects/1/polls/1")))
-                .andExpect(status().isNoContent());
+        webTestClient.delete()
+                .uri(URI.create("/subjects/1/polls/1"))
+                .exchange()
+                .expectStatus().isNoContent();
     }
 
     @Test
     public void testDeletePollNotFound() throws Exception {
         stubSubjectService.createSubject(Subject.of(1L, "subject"));
 
-        mockMvc.perform(MockMvcRequestBuilders
-                .delete(URI.create("/subjects/1/polls/1")))
-                .andExpect(status().isNotFound());
+        webTestClient.delete()
+                .uri(URI.create("/subjects/1/polls/1"))
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }

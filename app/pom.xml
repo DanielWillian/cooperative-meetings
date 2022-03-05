@@ -82,11 +82,6 @@
       </dependency>
       <dependency>
         <groupId>org.company.demo</groupId>
-        <artifactId>poll-ws-api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.company.demo</groupId>
         <artifactId>poll-ws-impl</artifactId>
         <version>${project.version}</version>
       </dependency>
