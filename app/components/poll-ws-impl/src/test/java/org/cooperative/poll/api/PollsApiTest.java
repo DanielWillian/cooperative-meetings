@@ -249,7 +249,7 @@ public class PollsApiTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createPollUpdate(
-                        1L, "poll", endDate.minus(Duration.ofDays(1))))))
+                        1L, "poll", startTime.minus(Duration.ofDays(1))))))
                 .andExpect(status().isBadRequest());
     }
 
