@@ -4,8 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cooperative.poll.exception.PollNotFoundException;
 import org.cooperative.poll.exception.PollValidationException;
 import org.cooperative.poll.exception.Validation;
-import org.cooperative.poll.jpa.PollRepository;
-import org.cooperative.subject.Subject;
 import org.cooperative.subject.SubjectNotFoundException;
 import org.cooperative.subject.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,21 +37,9 @@ public class PollServiceDefault implements PollService {
         if (poll.getEndDate() == null) {
             poll = poll.withEndDate(poll.getStartDate().plus(DEFAULT_END_DURATION));
         }
-        Subject subject = subjectService.getSubjectById(poll.getSubjectId())
-                .orElseThrow(() -> new SubjectNotFoundException());
+        Poll returnPoll = pollRepository.save(poll);
 
-        org.cooperative.poll.jpa.Poll toBeSaved = org.cooperative.poll.jpa.Poll.builder()
-                .name(poll.getName())
-                .startDate(poll.getStartDate())
-                .endDate(poll.getEndDate())
-                .subject(org.cooperative.subject.jpa.Subject.of(subject.getId(), null))
-                .build();
-
-        pollRepository.save(toBeSaved);
-
-        log.info("Created poll: {}", toBeSaved);
-
-        Poll returnPoll = mapFromJpa(toBeSaved);
+        log.info("Created poll: {}", returnPoll);
 
         log.trace("EXIT");
         return returnPoll;
@@ -80,10 +66,7 @@ public class PollServiceDefault implements PollService {
     @Override
     public Stream<Poll> getPollBySubjectId(long subjectId) {
         log.trace("ENTRY - subjectId: {}", subjectId);
-
-        Stream<Poll> polls = pollRepository.findBySubject_Id(subjectId).stream()
-                .map(this::mapFromJpa);
-
+        Stream<Poll> polls = pollRepository.getBySubjectId(subjectId);
         log.trace("EXIT");
         return polls;
     }
@@ -91,10 +74,7 @@ public class PollServiceDefault implements PollService {
     @Override
     public Optional<Poll> getPollByIdAndSubjectId(long id, long subjectId) {
         log.trace("ENTRY - id: {}, subjectId: {}", id, subjectId);
-
-        Optional<Poll> polls = pollRepository.findBySubject_IdAndId(subjectId, id)
-                .map(this::mapFromJpa);
-
+        Optional<Poll> polls = pollRepository.getBySubjectIdAndPollId(subjectId, id);
         log.trace("EXIT");
         return polls;
     }
@@ -102,10 +82,7 @@ public class PollServiceDefault implements PollService {
     @Override
     public Stream<Poll> getPollByNameAndSubjectId(String name, long subjectId) {
         log.trace("ENTRY - subjectId: {}", subjectId);
-
-        Stream<Poll> polls = pollRepository.findBySubject_IdAndName(subjectId, name).stream()
-                .map(this::mapFromJpa);
-
+        Stream<Poll> polls = pollRepository.getBySubjectIdAndPollName(subjectId, name);
         log.trace("EXIT");
         return polls;
     }
@@ -117,27 +94,28 @@ public class PollServiceDefault implements PollService {
         if (subjectService.getSubjectById(poll.getSubjectId()).isEmpty()) {
             throw new SubjectNotFoundException();
         }
-        org.cooperative.poll.jpa.Poll currentPoll = pollRepository.findById(poll.getId())
-                .orElseThrow(PollNotFoundException::new);
+        Poll.PollBuilder builder = pollRepository.getBySubjectIdAndPollId(poll.getSubjectId(), poll.getId())
+                .orElseThrow(PollNotFoundException::new)
+                .toBuilder();
 
-        currentPoll.setName(poll.getName());
-        if (poll.getStartDate() != null) currentPoll.setStartDate(poll.getStartDate());
-        if (poll.getEndDate() != null) currentPoll.setEndDate(poll.getEndDate());
+        builder.name(poll.getName());
+        if (poll.getStartDate() != null) builder.startDate(poll.getStartDate());
+        if (poll.getEndDate() != null) builder.endDate(poll.getEndDate());
 
-        if (!currentPoll.getStartDate().isBefore(currentPoll.getEndDate())) {
+        Poll updatedPoll = builder.build();
+
+        if (!updatedPoll.getStartDate().isBefore(updatedPoll.getEndDate())) {
             throw PollValidationException.builder()
                     .validation(Validation.END_DATE_EARLIER_THAN_START_DATE)
                     .build();
         }
 
-        pollRepository.save(currentPoll);
+        pollRepository.save(updatedPoll);
 
-        log.info("Updated poll: {}", currentPoll);
-
-        Poll returnPoll = mapFromJpa(currentPoll);
+        log.info("Updated poll: {}", updatedPoll);
 
         log.trace("EXIT");
-        return returnPoll;
+        return updatedPoll;
     }
 
     private void validatePollForUpdate(Poll poll) {
@@ -158,30 +136,17 @@ public class PollServiceDefault implements PollService {
     public void deletePollByIdAndSubjectId(long id, long subjectId) {
         log.trace("ENTRY - id: {}, subjectId: {}", id, subjectId);
 
-        Optional<Poll> polls = pollRepository.findBySubject_IdAndId(subjectId, id)
-                .map(this::mapFromJpa);
-
         if (subjectService.getSubjectById(subjectId).isEmpty()) {
             throw new SubjectNotFoundException();
         }
-        if (pollRepository.findBySubject_IdAndId(subjectId, id).isEmpty()) {
+        if (pollRepository.getBySubjectIdAndPollId(subjectId, id).isEmpty()) {
             throw new PollNotFoundException();
         }
 
-        pollRepository.deleteById(id);
+        pollRepository.deleteBySubjectIdAndPollId(subjectId, id);
 
         log.info("Deleted poll - id: {}, subjectId: {}", id, subjectId);
 
         log.trace("EXIT");
-    }
-
-    private Poll mapFromJpa(org.cooperative.poll.jpa.Poll poll) {
-        return Poll.builder()
-                .id(poll.getId())
-                .name(poll.getName())
-                .startDate(poll.getStartDate())
-                .endDate(poll.getEndDate())
-                .subjectId(poll.getSubject().getId())
-                .build();
     }
 }

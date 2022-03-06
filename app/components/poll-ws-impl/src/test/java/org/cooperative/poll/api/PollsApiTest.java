@@ -2,28 +2,29 @@ package org.cooperative.poll.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cooperative.poll.Poll;
+import org.cooperative.poll.PollRepository;
 import org.cooperative.poll.PollService;
 import org.cooperative.poll.PollServiceDefault;
-import org.cooperative.poll.jpa.PollRepository;
-import org.cooperative.poll.jpa.StubPollRepository;
-import org.cooperative.subject.StubSubjectService;
+import org.cooperative.poll.infrastructure.PollRepositoryImpl;
+import org.cooperative.poll.jpa.PollRepositoryJpa;
+import org.cooperative.poll.jpa.StubPollRepositoryJpa;
+import org.cooperative.subject.StubSubjectRepositoryJpa;
 import org.cooperative.subject.Subject;
+import org.cooperative.subject.SubjectRepository;
 import org.cooperative.subject.SubjectService;
+import org.cooperative.subject.SubjectServiceDefault;
+import org.cooperative.subject.infrastructure.SubjectRepositoryImpl;
+import org.cooperative.subject.jpa.SubjectRepositoryJpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import java.net.URI;
@@ -38,9 +39,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @WebFluxTest(PollsApiController.class)
@@ -56,10 +55,13 @@ public class PollsApiTest {
     private PollService service;
 
     @Autowired
-    private StubPollRepository stubPollRepository;
+    private StubPollRepositoryJpa stubPollRepository;
 
     @Autowired
-    private StubSubjectService stubSubjectService;
+    private StubSubjectRepositoryJpa stubSubjectRepository;
+
+    @Autowired
+    private SubjectService SubjectService;
 
     private final String startTimeString = "2021-06-27T12:00:00Z";
     private final String endTimeString = "2021-06-27T13:00:00Z";
@@ -79,13 +81,29 @@ public class PollsApiTest {
         }
 
         @Bean
-        public PollRepository pollRepository() {
-            return new StubPollRepository();
+        public PollRepository pollRepository(PollRepositoryJpa pollRepositoryJpa,
+                SubjectRepositoryJpa subjectRepositoryJpa) {
+            return new PollRepositoryImpl(pollRepositoryJpa, subjectRepositoryJpa);
         }
 
         @Bean
-        public SubjectService subjectService() {
-            return new StubSubjectService();
+        public PollRepositoryJpa pollRepositoryJpa() {
+            return new StubPollRepositoryJpa();
+        }
+
+        @Bean
+        public SubjectService subjectService(SubjectRepository repository) {
+            return new SubjectServiceDefault(repository);
+        }
+
+        @Bean
+        public SubjectRepository subjectRepository(SubjectRepositoryJpa subjectRepositoryJpa) {
+            return new SubjectRepositoryImpl(subjectRepositoryJpa);
+        }
+
+        @Bean
+        public SubjectRepositoryJpa subjectRepositoryJpa() {
+            return new StubSubjectRepositoryJpa();
         }
 
         @Bean
@@ -97,12 +115,12 @@ public class PollsApiTest {
     @AfterEach
     public void afterTest() {
         stubPollRepository.deleteAll();
-        stubSubjectService.deleteAllSubjects();
+        stubSubjectRepository.deleteAll();
     }
 
     @Test
     public void testGetPollsNoPolls() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         webTestClient.get()
                 .uri(URI.create("/subjects/1/polls"))
@@ -114,7 +132,7 @@ public class PollsApiTest {
 
     @Test
     public void testGetPollsSomePolls() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll1", startTime, endTime, 1L));
         service.createPoll(Poll.of(2L, "poll2", startTime, endTime, 1L));
 
@@ -130,7 +148,7 @@ public class PollsApiTest {
 
     @Test
     public void testAddPollSuccess() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
 
@@ -159,7 +177,7 @@ public class PollsApiTest {
 
     @Test
     public void testAddPollNoEndDate() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         PollResponse pollResponse = webTestClient.post()
                 .uri(URI.create("/subjects/1/polls"))
@@ -187,7 +205,7 @@ public class PollsApiTest {
 
     @Test
     public void testAddPollWrongFormat() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).minus(Duration.ofHours(1));
 
@@ -202,7 +220,7 @@ public class PollsApiTest {
 
     @Test
     public void testUpdatePollSuccess() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
 
         service.createPoll(Poll.of(1L, "poll", startTime, endDate, 1L));
@@ -231,7 +249,7 @@ public class PollsApiTest {
 
     @Test
     public void testUpdatePollWrongFormat() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).minus(Duration.ofHours(1));
 
         service.createPoll(Poll.of(1L, "poll", startTime, endDate, 1L));
@@ -247,7 +265,7 @@ public class PollsApiTest {
 
     @Test
     public void testUpdatePollNotFound() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         OffsetDateTime endDate = OffsetDateTime.now(ZoneId.of("UTC")).plus(Duration.ofHours(1));
 
         webTestClient.put()
@@ -261,7 +279,7 @@ public class PollsApiTest {
 
     @Test
     public void testGetPollSuccess() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
 
         PollResponse pollResponse = webTestClient.get()
@@ -279,7 +297,7 @@ public class PollsApiTest {
 
     @Test
     public void testGetPollNotFound() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         webTestClient.get()
                 .uri(URI.create("/subjects/1/polls/1"))
@@ -290,7 +308,7 @@ public class PollsApiTest {
 
     @Test
     public void testDeletePollSuccess() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
 
         webTestClient.delete()
@@ -301,7 +319,7 @@ public class PollsApiTest {
 
     @Test
     public void testDeletePollNotFound() throws Exception {
-        stubSubjectService.createSubject(Subject.of(1L, "subject"));
+        SubjectService.createSubject(Subject.of(1L, "subject"));
 
         webTestClient.delete()
                 .uri(URI.create("/subjects/1/polls/1"))

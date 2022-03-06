@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 
 @AllArgsConstructor(staticName = "of")
 @Value
-@Builder
+@Builder(toBuilder = true)
 @With
 public class Poll {
     Long id;

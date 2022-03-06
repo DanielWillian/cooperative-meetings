@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class StubPollRepository implements PollRepository {
+public class StubPollRepositoryJpa implements PollRepositoryJpa {
 
     List<Poll> polls = new ArrayList<>();
     long nextId = 1;
@@ -32,6 +32,11 @@ public class StubPollRepository implements PollRepository {
         return polls.stream()
                 .filter(p -> p.getName().equals(name) && p.getSubject().getId() == subjectId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteBySubject_IdAndId(long subjectId, long pollId) {
+        polls.removeIf(p -> p.getId() == pollId && p.getSubject().getId() == subjectId);
     }
 
     @Override

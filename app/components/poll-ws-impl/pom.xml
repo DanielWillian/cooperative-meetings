@@ -37,6 +37,16 @@
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
+      <artifactId>poll-infrastructure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>subject-domain</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
       <artifactId>subject-stubs</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -55,11 +65,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -19,6 +19,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>subject-infrastructure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <scope>test</scope>

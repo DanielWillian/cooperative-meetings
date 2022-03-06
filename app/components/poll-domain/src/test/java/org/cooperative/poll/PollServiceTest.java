@@ -3,69 +3,62 @@ package org.cooperative.poll;
 import org.cooperative.poll.exception.PollNotFoundException;
 import org.cooperative.poll.exception.PollValidationException;
 import org.cooperative.poll.exception.Validation;
-import org.cooperative.poll.jpa.PollRepository;
-import org.cooperative.poll.jpa.StubPollRepository;
 import org.cooperative.subject.Subject;
-import org.cooperative.subject.StubSubjectService;
 import org.cooperative.subject.SubjectNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
+import org.cooperative.subject.SubjectService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class PollServiceTest {
+@ExtendWith(MockitoExtension.class)
+class PollServiceTest {
 
-    PollRepository pollRepository = new StubPollRepository();
-    StubSubjectService subjectService = new StubSubjectService();
-    PollService pollService = new PollServiceDefault(pollRepository, subjectService);
+    @InjectMocks
+    PollServiceDefault pollService;
 
-    @BeforeEach
-    public void beforeEach() {
-        subjectService.deleteAllSubjects();
-        pollRepository.deleteAll();
-    }
+    @Mock
+    PollRepository pollRepository;
+
+    @Mock
+    SubjectService subjectService;
 
     @Test
-    public void testCreatePollSuccess() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
-
+    void testCreatePollSuccess() {
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(null, "poll", startTime,
                 startTime.plus(Duration.ofMinutes(1)), 1L);
-        Poll returnedPoll = pollService.createPoll(poll);
-        Poll expectedPoll = poll.withId(returnedPoll.getId());
-        assertEquals(expectedPoll, returnedPoll);
 
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
-        assertFalse(optional.isEmpty());
-        assertEquals(mapToJpa(expectedPoll), optional.get());
+        pollService.createPoll(poll);
+        verify(pollRepository, times(1))
+                .save(Poll.of(null, "poll", startTime, startTime.plus(Duration.ofMinutes(1)), 1L));
     }
 
     @Test
-    public void testCreatePollSubjectNotFound() {
+    void testCreatePollSubjectNotFound() {
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(null, "poll", startTime,
                 startTime.plus(Duration.ofMinutes(1)), 1L);
+        when(pollRepository.save(poll))
+                .thenThrow(SubjectNotFoundException.class);
+
         assertThrows(SubjectNotFoundException.class, () -> pollService.createPoll(poll));
     }
 
     @Test
-    public void testCreatePollMissingStartDate() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
-
+    void testCreatePollMissingStartDate() {
         OffsetDateTime endTime = OffsetDateTime.now().plus(Duration.ofMinutes(1));
         Poll poll = Poll.of(null, "poll", null, endTime, 1L);
         PollValidationException exception = assertThrows(
@@ -75,28 +68,21 @@ public class PollServiceTest {
     }
 
     @Test
-    public void testCreatePollMissingEndDate() {
+    void testCreatePollMissingEndDate() {
         Subject subject = Subject.of(1L, "subject");
         subjectService.createSubject(subject);
 
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(null, "poll", startTime, null, 1L);
 
-        Poll returnedPoll = pollService.createPoll(poll);
-        Poll expectedPoll = poll.withId(returnedPoll.getId())
-                .withEndDate(startTime.plus(Duration.ofMinutes(1)));
-        assertEquals(expectedPoll, returnedPoll);
+        pollService.createPoll(poll);
 
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
-        assertFalse(optional.isEmpty());
-        assertEquals(mapToJpa(expectedPoll), optional.get());
+        verify(pollRepository, times(1))
+                .save(poll.withEndDate(startTime.plus(Duration.ofMinutes(1))));
     }
 
     @Test
-    public void testCreatePollNameTooLong() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
-
+    void testCreatePollNameTooLong() {
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(1L, " ".repeat(201), startTime,
                 startTime.plus(Duration.ofMinutes(1)), 1L);
@@ -107,10 +93,7 @@ public class PollServiceTest {
     }
 
     @Test
-    public void testCreatePollEndDateEarlierThanStartDate() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
-
+    void testCreatePollEndDateEarlierThanStartDate() {
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(null, "poll", startTime,
                 startTime.minus(Duration.ofMinutes(1)), 1L);
@@ -121,174 +104,47 @@ public class PollServiceTest {
     }
 
     @Test
-    public void testGetPollBySubjectIdNoPolls() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-        subjectService.createSubject(Subject.of(2L, "subject2"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        List<Poll> polls = pollService.getPollBySubjectId(2L)
-                .collect(Collectors.toList());
-
-        assertTrue(polls.isEmpty());
+    void testGetPollBySubjectId() {
+        pollService.getPollBySubjectId(2L);
+        verify(pollRepository, times(1))
+                .getBySubjectId(2);
     }
 
     @Test
-    public void testGetPollBySubjectIdSomePolls() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-        subjectService.createSubject(Subject.of(2L, "subject2"));
-
-        OffsetDateTime startTime = OffsetDateTime.now();
-        OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 2L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 3L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(2L, null)));
-
-        List<Poll> polls = pollService.getPollBySubjectId(1L)
-                .collect(Collectors.toList());
-
-        assertEquals(2, polls.size());
-        assertThat(polls, contains(Poll.of(1L, "poll", startTime, endTime, 1L),
-                Poll.of(2L, "poll", startTime, endTime, 1L)));
+    void testGetPollByIdAndSubjectId() {
+        pollService.getPollByIdAndSubjectId(2L, 1L);
+        verify(pollRepository, times(1))
+                .getBySubjectIdAndPollId(1L, 2L);
     }
 
     @Test
-    public void testGetPollBySubjectIdSubjectNotFound() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        List<Poll> polls = pollService.getPollBySubjectId(2L)
-                .collect(Collectors.toList());
-
-        assertTrue(polls.isEmpty());
-    }
-
-    @Test
-    public void testGetPollByIdAndSubjectIdNoPoll() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        Optional<Poll> optional = pollService.getPollByIdAndSubjectId(2L, 1L);
-
-        assertTrue(optional.isEmpty());
-    }
-
-    @Test
-    public void testGetPollByIdAndSubjectId() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        OffsetDateTime startTime = OffsetDateTime.now();
-        OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        Optional<Poll> optional = pollService.getPollByIdAndSubjectId(1L, 1L);
-
-        assertFalse(optional.isEmpty());
-        assertEquals(Poll.of(1L, "poll", startTime, endTime, 1L), optional.get());
-    }
-
-    @Test
-    public void testGetPollByIdAndSubjectIdSubjectNotFound() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        Optional<Poll> optional = pollService.getPollByIdAndSubjectId(2L, 2L);
-
-        assertTrue(optional.isEmpty());
-    }
-
-    @Test
-    public void testGetPollByNameAndSubjectIdNoPoll() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        List<Poll> optional = pollService.getPollByNameAndSubjectId("poll name", 1L)
-                .collect(Collectors.toList());
-
-        assertTrue(optional.isEmpty());
-    }
-
-    @Test
-    public void testGetPollByNameAndSubjectIdSomePools() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        OffsetDateTime startTime = OffsetDateTime.now();
-        OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime,
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 2L, "poll",
-                startTime, endTime,
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        List<Poll> polls = pollService.getPollByNameAndSubjectId("poll", 1L)
-                .collect(Collectors.toList());
-
-        assertEquals(2, polls.size());
-        assertThat(polls, contains(Poll.of(1L, "poll", startTime, endTime, 1L),
-                Poll.of(2L, "poll", startTime, endTime, 1L)));
-    }
-
-    @Test
-    public void testGetPollByNameAndSubjectIdSubjectNotFound() {
-        subjectService.createSubject(Subject.of(1L, "subject1"));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)),
-                org.cooperative.subject.jpa.Subject.of(1L, null)));
-
-        List<Poll> optional = pollService.getPollByNameAndSubjectId("poll", 2L)
-                .collect(Collectors.toList());
-
-        assertTrue(optional.isEmpty());
+    public void testGetPollByNameAndSubjectId() {
+        pollService.getPollByNameAndSubjectId("poll name", 1L);
+        verify(pollRepository, times(1))
+                .getBySubjectIdAndPollName(1L, "poll name");
     }
 
     @Test
     public void testUpdatePollSuccess() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
 
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.of(Poll.of( 1L, "poll", startTime, endTime, 1L)));
 
         Poll poll = Poll.of(1L, "poll updated", startTime, endTime, 1L);
-        Poll returnedPoll = pollService.updatePoll(poll);
-        assertEquals(poll, returnedPoll);
-
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(poll.getId());
-        assertFalse(optional.isEmpty());
-        assertEquals(mapToJpa(poll), optional.get());
+        pollService.updatePoll(poll);
+        verify(pollRepository, times(1))
+                .save(Poll.of(1L, "poll updated", startTime, endTime, 1L));
     }
 
     @Test
     public void testUpdatePollSubjectNotFound() {
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.empty());
+
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(1L, "poll", startTime,
                 startTime.plus(Duration.ofMinutes(1)), 1L);
@@ -297,8 +153,11 @@ public class PollServiceTest {
 
     @Test
     public void testUpdatePollPollNotFound() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
+
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.empty());
 
         OffsetDateTime startTime = OffsetDateTime.now();
         Poll poll = Poll.of(1L, "poll", startTime,
@@ -308,57 +167,42 @@ public class PollServiceTest {
 
     @Test
     public void testUpdatePollMissingStartDate() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
 
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
 
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.of(Poll.of( 1L, "poll", startTime, endTime, 1L)));
 
         Poll poll = Poll.of(1L, "poll", null, endTime, 1L);
-        Poll returnedPoll = pollService.updatePoll(poll);
-        Poll expectedPoll = poll.withStartDate(returnedPoll.getStartDate());
-        assertEquals(expectedPoll, returnedPoll);
-
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
-        assertFalse(optional.isEmpty());
-        assertEquals(mapToJpa(expectedPoll), optional.get());
+        pollService.updatePoll(poll);
+        verify(pollRepository, times(1))
+                .save(Poll.of(1L, "poll", startTime, endTime, 1L));
     }
 
     @Test
     public void testUpdatePollMissingEndDate() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
 
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
 
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.of(Poll.of( 1L, "poll", startTime, endTime, 1L)));
 
         Poll poll = Poll.of(1L, "poll", startTime, null, 1L);
-        Poll returnedPoll = pollService.updatePoll(poll);
-        Poll expectedPoll = poll.withEndDate(returnedPoll.getEndDate());
-        assertEquals(expectedPoll, returnedPoll);
-
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(expectedPoll.getId());
-        assertFalse(optional.isEmpty());
-        assertEquals(mapToJpa(expectedPoll), optional.get());
+        pollService.updatePoll(poll);
+        verify(pollRepository, times(1))
+                .save(Poll.of(1L, "poll", startTime, endTime, 1L));
     }
 
     @Test
     public void testUpdatePollNameTooLong() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
-
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
-
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
-
         Poll poll = Poll.of(1L, " ".repeat(201), startTime, endTime, 1L);
         PollValidationException exception = assertThrows(
                 PollValidationException.class, () -> pollService.updatePoll(poll));
@@ -368,14 +212,14 @@ public class PollServiceTest {
 
     @Test
     public void testUpdatePollEndDateEarlierThanStartDate() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
 
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
 
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.of(Poll.of( 1L, "poll", startTime, endTime, 1L)));
 
         Poll poll = Poll.of(1L, "poll", startTime,
                 startTime.minus(Duration.ofMinutes(1)), 1L);
@@ -387,40 +231,33 @@ public class PollServiceTest {
 
     @Test
     public void testDeletePollSuccess() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
 
         OffsetDateTime startTime = OffsetDateTime.now();
         OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
 
-        pollRepository.save(org.cooperative.poll.jpa.Poll.of( 1L, "poll",
-                startTime, endTime, org.cooperative.subject.jpa.Subject.of(1L, null)));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.of(Poll.of( 1L, "poll", startTime, endTime, 1L)));
 
         pollService.deletePollByIdAndSubjectId(1L, 1L);
-
-        Optional<org.cooperative.poll.jpa.Poll> optional = pollRepository.findById(1L);
-        assertTrue(optional.isEmpty());
+        verify(pollRepository, times(1))
+                .deleteBySubjectIdAndPollId(1L, 1L);
     }
 
     @Test
     public void testDeletePollSubjectNotFound() {
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.empty());
         assertThrows(SubjectNotFoundException.class, () -> pollService.deletePollByIdAndSubjectId(1L, 1L));
     }
 
     @Test
     public void testDeletePollPollNotFound() {
-        Subject subject = Subject.of(1L, "subject");
-        subjectService.createSubject(subject);
+        when(subjectService.getSubjectById(1L))
+                .thenReturn(Optional.of(Subject.of(1L, "subject")));
+        when(pollRepository.getBySubjectIdAndPollId(1L, 1L))
+                .thenReturn(Optional.empty());
         assertThrows(PollNotFoundException.class, () -> pollService.deletePollByIdAndSubjectId(1L, 1L));
-    }
-
-    private org.cooperative.poll.jpa.Poll mapToJpa(Poll poll) {
-        return org.cooperative.poll.jpa.Poll.builder()
-                .id(poll.getId())
-                .name(poll.getName())
-                .startDate(poll.getStartDate())
-                .endDate(poll.getEndDate())
-                .subject(org.cooperative.subject.jpa.Subject.of(poll.getSubjectId(), null))
-                .build();
     }
 }
