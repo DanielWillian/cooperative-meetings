@@ -1,83 +1,92 @@
 package org.cooperative.subject;
 
-import org.cooperative.subject.jpa.SubjectRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class SubjectServiceTest {
+@ExtendWith(MockitoExtension.class)
+class SubjectServiceTest {
 
-    private SubjectRepository subjectRepository = new StubSubjectRepository();
-    private SubjectService subjectService = new SubjectServiceDefault(subjectRepository);
+    @InjectMocks
+    SubjectServiceDefault subjectService;
 
-    @Before
-    public void beforeTest() {
-        subjectRepository.deleteAll();
+    @Mock
+    SubjectRepository subjectRepository;
+
+    @Test
+    void testCreateSubjectSuccess() {
+        when(subjectRepository.existsById(0)).thenReturn(false);
+        subjectService.createSubject(Subject.of(0, "name"));
+        verify(subjectRepository, times(1))
+                .save(Subject.of(0, "name"));
     }
 
     @Test
-    public void testCreateSubjectSuccess() {
-        subjectService.createSubject(Subject.of(0, "name"));
-        Optional<org.cooperative.subject.jpa.Subject> optionalSubject = subjectRepository.findById(0L);
-        assertTrue(optionalSubject.isPresent());
-        assertEquals(org.cooperative.subject.jpa.Subject.of(0L, "name"), optionalSubject.get());
-    }
-
-    @Test
-    public void testCreateSubjectAlreadyExists() {
-        subjectService.createSubject(Subject.of(0, "name"));
+    void testCreateSubjectAlreadyExists() {
+        when(subjectRepository.existsById(0)).thenReturn(true);
+        Subject subject = Subject.of(0, "name");
         assertThrows(SubjectAlreadyExistsException.class,
-                () -> subjectService.createSubject(Subject.of(0, "name")));
+                () -> subjectService.createSubject(subject));
     }
 
     @Test
-    public void testCreateSubjectWrongFormat() {
+    void testCreateSubjectWrongFormat() {
+        Subject subject = Subject.of(-1, "name");
         assertThrows(SubjectWrongFormatException.class,
-                () -> subjectService.createSubject(Subject.of(-1, "name")));
+                () -> subjectService.createSubject(subject));
     }
 
     @Test
-    public void testUpdateSubjectSuccess() {
-        subjectService.createSubject(Subject.of(0, "name"));
+    void testUpdateSubjectSuccess() {
+        when(subjectRepository.existsById(0)).thenReturn(true);
         subjectService.updateSubject(Subject.of(0, "updated"));
-        Optional<org.cooperative.subject.jpa.Subject> optionalSubject = subjectRepository.findById(0L);
-        assertTrue(optionalSubject.isPresent());
-        assertEquals(org.cooperative.subject.jpa.Subject.of(0L, "updated"), optionalSubject.get());
+        verify(subjectRepository, times(1))
+                .save(Subject.of(0, "updated"));
     }
 
     @Test
-    public void testUpdateSubjectNotFound() {
+    void testUpdateSubjectNotFound() {
+        when(subjectRepository.existsById(0)).thenReturn(false);
+        Subject subject = Subject.of(0, "name");
         assertThrows(SubjectNotFoundException.class,
-                () -> subjectService.updateSubject(Subject.of(0, "name")));
+                () -> subjectService.updateSubject(subject));
     }
 
     @Test
-    public void testUpdateSubjectWrongFormat() {
+    void testUpdateSubjectWrongFormat() {
+        Subject subject = Subject.of(-1, "name");
         assertThrows(SubjectWrongFormatException.class,
-                () -> subjectService.updateSubject(Subject.of(-1, "name")));
+                () -> subjectService.updateSubject(subject));
     }
 
     @Test
-    public void testGetAllSubjectsNoSubjects() {
+    void testGetAllSubjectsNoSubjects() {
+        when(subjectRepository.getAll()).thenReturn(Stream.empty());
         List<Subject> allSubjects = subjectService.getAllSubjects()
                 .collect(Collectors.toList());
         assertTrue(allSubjects.isEmpty());
     }
 
     @Test
-    public void testGetAllSubjectsSomeSubjects() {
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name0"));
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(1L, "name1"));
+    void testGetAllSubjectsSomeSubjects() {
+        when(subjectRepository.getAll()).thenReturn(
+                Stream.of(Subject.of(0L, "name0"), Subject.of(1L, "name1")));
         List<Subject> allSubjects = subjectService.getAllSubjects()
                 .collect(Collectors.toList());
         Subject[] expectedSubjects = new Subject[] { Subject.of(0, "name0"), Subject.of(1, "name1") };
@@ -85,37 +94,32 @@ public class SubjectServiceTest {
     }
 
     @Test
-    public void testGetSubjectByIdNotFound() {
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name"));
-        List<Subject> allSubjects = subjectService.getAllSubjects()
-                .collect(Collectors.toList());
-        assertFalse(allSubjects.isEmpty());
+    void testGetSubjectByIdNotFound() {
+        when(subjectRepository.getById(1)).thenReturn(Optional.empty());
         Optional<Subject> optionalSubject = subjectService.getSubjectById(1);
         assertFalse(optionalSubject.isPresent());
     }
 
     @Test
-    public void testGetSubjectByIdWrongFormat() {
+    void testGetSubjectByIdWrongFormat() {
         assertThrows(SubjectWrongFormatException.class,
                 () -> subjectService.getSubjectById(-1));
     }
 
     @Test
     public void testGetSubjectByNameNoSubjects() {
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "nameA"));
-        List<Subject> allSubjects = subjectService.getAllSubjects()
+        when(subjectRepository.getByName("name")).thenReturn(Stream.empty());
+        List<Subject> subjects = subjectService.getSubjectByName("name")
                 .collect(Collectors.toList());
-        assertFalse(allSubjects.isEmpty());
-        List<Subject> nameBSubjects = subjectService.getSubjectByName("nameB")
-                .collect(Collectors.toList());
-        assertTrue(nameBSubjects.isEmpty());
+        assertTrue(subjects.isEmpty());
     }
 
     @Test
     public void testGetSubjectByNameSomeSubjects() {
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "nameA"));
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(1L, "nameB"));
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(2L, "nameA"));
+        when(subjectRepository.getByName("nameA")).thenReturn(Stream.of(
+                Subject.of(0, "nameA"),
+                Subject.of(2, "nameA")
+        ));
         List<Subject> subjects = subjectService.getSubjectByName("nameA")
                 .collect(Collectors.toList());
         Subject[] expectedSubjects = new Subject[] { Subject.of(0, "nameA"), Subject.of(2, "nameA") };
@@ -124,14 +128,15 @@ public class SubjectServiceTest {
 
     @Test
     public void testDeleteSubjectSuccess() {
-        subjectRepository.save(org.cooperative.subject.jpa.Subject.of(0L, "name"));
+        when(subjectRepository.existsById(0)).thenReturn(true);
         subjectService.deleteSubject(0);
-        Optional<Subject> deletedSubject = subjectService.getSubjectById(0);
-        assertFalse(deletedSubject.isPresent());
+        verify(subjectRepository, times(1))
+                .deleteById(0);
     }
 
     @Test
     public void testDeleteSubjectNotFound() {
+        when(subjectRepository.existsById(0)).thenReturn(false);
         assertThrows(SubjectNotFoundException.class,
                 () -> subjectService.deleteSubject(0));
     }

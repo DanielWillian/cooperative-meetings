@@ -1,9 +1,7 @@
 package org.cooperative.subject;
 
 import lombok.extern.slf4j.Slf4j;
-import org.cooperative.subject.jpa.SubjectRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.cooperative.subject.SubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,15 +30,14 @@ public class SubjectServiceDefault implements SubjectService {
             throw new SubjectAlreadyExistsException();
         }
         log.info("Subject create accepted: {}", subject);
-        repository.save(mapToJpa(subject));
+        repository.save(subject);
         log.trace("EXIT");
     }
 
     @Override
     public Stream<Subject> getAllSubjects() {
         log.trace("ENTRY");
-        Stream<Subject> subjectStream = StreamSupport.stream(repository.findAll().spliterator(), false)
-                .map(this::mapFromJpa);
+        Stream<Subject> subjectStream = repository.getAll();
         log.trace("EXIT");
         return subjectStream;
     }
@@ -49,8 +46,7 @@ public class SubjectServiceDefault implements SubjectService {
     public Optional<Subject> getSubjectById(long id) {
         log.trace("ENTRY - id: {}", id);
         validateId(id);
-        Optional<Subject> optionalSubject = repository.findById(id)
-                .map(this::mapFromJpa);
+        Optional<Subject> optionalSubject = repository.getById(id);
         log.trace("EXIT");
         return optionalSubject;
     }
@@ -58,8 +54,7 @@ public class SubjectServiceDefault implements SubjectService {
     @Override
     public Stream<Subject> getSubjectByName(String name) {
         log.trace("ENTRY - name: {}", name);
-        Stream<Subject> subjectStream = repository.findByName(name).stream()
-                .map(this::mapFromJpa);
+        Stream<Subject> subjectStream = repository.getByName(name);
         log.trace("EXIT");
         return subjectStream;
     }
@@ -73,7 +68,7 @@ public class SubjectServiceDefault implements SubjectService {
             throw new SubjectNotFoundException();
         }
         log.info("Subject update accepted: {}", subject);
-        repository.save(mapToJpa(subject));
+        repository.save(subject);
         log.trace("EXIT");
     }
 
@@ -99,13 +94,5 @@ public class SubjectServiceDefault implements SubjectService {
 
     private boolean isValidId(long id) {
         return id >= 0;
-    }
-
-    private org.cooperative.subject.jpa.Subject mapToJpa(Subject subject) {
-        return org.cooperative.subject.jpa.Subject.of(subject.getId(), subject.getName());
-    }
-
-    private Subject mapFromJpa(org.cooperative.subject.jpa.Subject subject) {
-        return Subject.of(subject.getId(), subject.getName());
     }
 }

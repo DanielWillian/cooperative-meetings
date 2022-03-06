@@ -14,16 +14,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = Application.class)
 @TestPropertySource(locations = "classpath:application-test.properties")
-public class SubjectRepositoryTest {
+public class SubjectRepositoryJpaTest {
 
     @Autowired
-    private SubjectRepository subjectRepository;
+    private SubjectRepositoryJpa subjectRepositoryJpa;
 
     @Test
     public void findById() {
         Subject subject = Subject.of(1L, "name");
-        subjectRepository.save(subject);
-        Optional<Subject> optionalSubject = subjectRepository.findById(1L);
+        subjectRepositoryJpa.save(subject);
+        Optional<Subject> optionalSubject = subjectRepositoryJpa.findById(1L);
         assertTrue(optionalSubject.isPresent());
         assertEquals(subject, optionalSubject.get());
     }
@@ -31,8 +31,8 @@ public class SubjectRepositoryTest {
     @Test
     public void findByName() {
         Subject subject = Subject.of(1L, "name");
-        subjectRepository.save(subject);
-        List<Subject> optionalSubject = subjectRepository.findByName("name");
+        subjectRepositoryJpa.save(subject);
+        List<Subject> optionalSubject = subjectRepositoryJpa.findByName("name");
         assertFalse(optionalSubject.isEmpty());
         assertEquals(subject, optionalSubject.get(0));
     }
