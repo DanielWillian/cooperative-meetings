@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.company.demo</groupId>
     <artifactId>cooperative-meetings-distros</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5-SNAPSHOT</version>
   </parent>
 
   <groupId>org.company.demo.distro</groupId>
