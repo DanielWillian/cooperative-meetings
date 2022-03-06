@@ -36,17 +36,17 @@
       </dependency>
       <dependency>
         <groupId>org.company.demo</groupId>
-        <artifactId>subject-api</artifactId>
+        <artifactId>subject-domain-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.company.demo</groupId>
-        <artifactId>subject-jpa-api</artifactId>
+        <artifactId>subject-infrastructure</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.company.demo</groupId>
-        <artifactId>subject-lib</artifactId>
+        <artifactId>subject-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

@@ -10,7 +10,7 @@
     <version>0.0.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>subject-api</artifactId>
+  <artifactId>subject-domain-api</artifactId>
 
   <dependencies>
     <dependency>

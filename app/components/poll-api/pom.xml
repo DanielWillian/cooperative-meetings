@@ -20,7 +20,7 @@
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>subject-api</artifactId>
+      <artifactId>subject-domain-api</artifactId>
     </dependency>
   </dependencies>
 

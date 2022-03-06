@@ -10,16 +10,16 @@
     <version>0.0.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>subject-lib</artifactId>
+  <artifactId>subject-domain</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>subject-api</artifactId>
+      <artifactId>subject-domain-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>subject-jpa-api</artifactId>
+      <artifactId>subject-infrastructure</artifactId>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

@@ -14,9 +14,9 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>subject-api</module>
-    <module>subject-lib</module>
-    <module>subject-jpa-api</module>
+    <module>subject-domain-api</module>
+    <module>subject-domain</module>
+    <module>subject-infrastructure</module>
     <module>subject-ws-impl</module>
     <module>poll-api</module>
     <module>poll-lib</module>
