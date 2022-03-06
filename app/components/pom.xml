@@ -18,9 +18,9 @@
     <module>subject-domain</module>
     <module>subject-infrastructure</module>
     <module>subject-ws-impl</module>
-    <module>poll-api</module>
-    <module>poll-lib</module>
-    <module>poll-jpa-api</module>
+    <module>poll-domain-api</module>
+    <module>poll-domain</module>
+    <module>poll-infrastructure</module>
     <module>poll-ws-impl</module>
   </modules>
 

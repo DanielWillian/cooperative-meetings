@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>poll-jpa-api</artifactId>
+      <artifactId>poll-infrastructure</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

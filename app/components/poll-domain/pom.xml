@@ -10,16 +10,16 @@
     <version>0.0.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>poll-lib</artifactId>
+  <artifactId>poll-domain</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>poll-api</artifactId>
+      <artifactId>poll-domain-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>poll-jpa-api</artifactId>
+      <artifactId>poll-infrastructure</artifactId>
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>

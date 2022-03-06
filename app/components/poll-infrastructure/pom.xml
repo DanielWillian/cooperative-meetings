@@ -10,7 +10,7 @@
     <version>0.0.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>poll-jpa-api</artifactId>
+  <artifactId>poll-infrastructure</artifactId>
 
   <dependencies>
     <dependency>

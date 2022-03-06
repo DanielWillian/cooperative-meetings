@@ -10,7 +10,7 @@
     <version>0.0.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>poll-api</artifactId>
+  <artifactId>poll-domain-api</artifactId>
 
   <dependencies>
     <dependency>

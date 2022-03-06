@@ -31,7 +31,7 @@
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
-      <artifactId>poll-lib</artifactId>
+      <artifactId>poll-domain</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
