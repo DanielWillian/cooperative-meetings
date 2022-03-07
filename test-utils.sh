@@ -16,6 +16,8 @@
 #+          Jar to be used for application.
 #+    -d, --docker <docker-compose>
 #+          Docker compose file to be used to deploy/undeploy application.
+#+    -k, --k6 <file>
+#+          File used for stress test.
 #+    -p, --port <port>
 #+          Port application will expose. Default is 8080.
 #+    -a, --app <name>
@@ -28,7 +30,9 @@
 #+    undeploy    - Undeploys application
 #+    check       - Check if application is up
 #+    test        - Check if app is up and run integration test
+#+    stress      - Check if app is up and run stress test
 #+    deploy-test - Deploys, run tests and undeploys application
+#+    deploy-test-all - Deploys, run all tests and undeploys application
 #+
 #+EXAMPLES
 #+    ${SCRIPT_NAME} -j app.jar -d docker-compose.yaml deploy-test
@@ -67,6 +71,10 @@ parse_args() {
         DOCKER_COMPOSE_FILE="$2"
         shift 2
         ;;
+      -k|--k6)
+        K6_SCRIPT="$2"
+        shift 2
+        ;;
       -p|--port)
         PORT="$2"
         shift 2
@@ -93,10 +101,21 @@ parse_args() {
       CHECK=true
       TEST=true
       ;;
+    stress)
+      CHECK=true
+      STRESS=true
+      ;;
     deploy-test)
       DEPLOY=true
       CHECK=true
       TEST=true
+      UNDEPLOY=true
+      ;;
+    deploy-test-all)
+      DEPLOY=true
+      CHECK=true
+      TEST=true
+      STRESS=true
       UNDEPLOY=true
       ;;
     *)
@@ -184,6 +203,10 @@ test_app() {
   mvn -f "${SCRIPT_DIR}/pom.xml" -P tests clean test "-Dkarate.options=--tags ~@ignore"
 }
 
+stress_test() {
+  docker run -i grafana/k6 run - < "${K6_SCRIPT}"
+}
+
 undeploy_app() {
   docker-compose --project-name "${APP_NAME}" \
       --file "${DOCKER_COMPOSE_FILE}" down
@@ -209,6 +232,10 @@ main() {
     test_app
     TEST_EXIT_CODE=$?
   fi
+  if [ -n "${STRESS}" ] && [ "${CHECK_EXIT_CODE}" -eq 0 ]; then
+    stress_test
+    STRESS_EXIT_CODE=$?
+  fi
   if [ -n "${UNDEPLOY}" ]; then
     undeploy_app
     EXIT_CODE=$?
@@ -217,6 +244,7 @@ main() {
 
   [ -n "${CHECK_EXIT_CODE}" ] && [ "${CHECK_EXIT_CODE}" -ne 0 ] && exit "${CHECK_EXIT_CODE}"
   [ -n "${TEST_EXIT_CODE}" ] && [ "${TEST_EXIT_CODE}" -ne 0 ] && exit "${TEST_EXIT_CODE}"
+  [ -n "${STRESS_EXIT_CODE}" ] && [ "${STRESS_EXIT_CODE}" -ne 0 ] && exit "${STRESS_EXIT_CODE}"
 
   exit 0
 }

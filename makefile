@@ -10,9 +10,10 @@ TEST_DOCKER_COMPOSE := $(PROJECT_DIR)distros/integration-test/src/main/resources
 TEST_UTILS_SCRIPT := $(PROJECT_DIR)test-utils.sh
 SRC_FILES := $(shell git ls-files app | grep -v test)
 SUPPORTING_FILES := $(PROJECT_DIR)pom.xml $(PROJECT_DIR)makefile $(TEST_UTILS_SCRIPT)
+K6_SCRIPT := $(PROJECT_DIR)tests/load-balance/vote-api.js
 
 .SUFFIXES:
-.PHONY: app-jar build test deploy undeploy deploy-test check integration-test
+.PHONY: app-jar build test deploy undeploy deploy-test stress deploy-test-all check integration-test
 .DELETE_ON_ERROR:
 
 $(WEB_APP_JAR): $(SRC_FILES) $(SUPPORTING_FILES)
@@ -26,8 +27,8 @@ build:
 test:
 	mvn clean test
 
-deploy undeploy deploy-test: $(WEB_APP_JAR)
-	$(TEST_UTILS_SCRIPT) -j $(WEB_APP_JAR) -d $(TEST_DOCKER_COMPOSE) $@
+deploy undeploy deploy-test stress deploy-test-all: $(WEB_APP_JAR)
+	$(TEST_UTILS_SCRIPT) -j $(WEB_APP_JAR) -d $(TEST_DOCKER_COMPOSE) -k $(K6_SCRIPT) $@
 
 check:
 	$(TEST_UTILS_SCRIPT) $@
