@@ -25,6 +25,7 @@
     <module>vote-domain-api</module>
     <module>vote-domain</module>
     <module>vote-infrastructure</module>
+    <module>vote-ws-impl</module>
   </modules>
 
 </project>
