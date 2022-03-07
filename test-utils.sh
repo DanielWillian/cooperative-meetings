@@ -3,7 +3,7 @@
 # HEADER
 #================================================================
 #+SYNOPSIS
-#+    ${SCRIPT_NAME} -j <jar> -d <docker-compose> [-p <port>] [-a <name>]
+#+    ${SCRIPT_NAME} -j <jar> -d <docker-compose> [-k <file>] [-l] [-p <port>] [-a <name>]
 #+                    (deploy|undeploy|deploy-test)
 #+    ${SCRIPT_NAME} [-p <port>] (test|check)
 #+    ${SCRIPT_NAME} (--help|-h|help|)
@@ -18,6 +18,8 @@
 #+          Docker compose file to be used to deploy/undeploy application.
 #+    -k, --k6 <file>
 #+          File used for stress test.
+#+    -l, --linux
+#+          Run stress test on linux machine.
 #+    -p, --port <port>
 #+          Port application will expose. Default is 8080.
 #+    -a, --app <name>
@@ -74,6 +76,10 @@ parse_args() {
       -k|--k6)
         K6_SCRIPT="$2"
         shift 2
+        ;;
+      -l|--linux)
+        K6_ADDITIONAL_ARGS="--add-host=host.docker.internal:host-gateway"
+        shift 1
         ;;
       -p|--port)
         PORT="$2"
@@ -204,7 +210,7 @@ test_app() {
 }
 
 stress_test() {
-  docker run -i grafana/k6 run - < "${K6_SCRIPT}"
+  docker run ${K6_ADDITIONAL_ARGS} -i grafana/k6 run - < "${K6_SCRIPT}"
 }
 
 undeploy_app() {
