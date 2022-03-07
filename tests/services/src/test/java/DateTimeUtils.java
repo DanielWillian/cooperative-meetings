@@ -11,6 +11,12 @@ public class DateTimeUtils {
                 .toString();
     }
 
+    public static String getRecentFutureOffsetDateTimeString() {
+        return OffsetDateTime.now(UTC)
+                .plus(Duration.ofSeconds(1))
+                .toString();
+    }
+
     public static String getPastOffsetDateTimeString() {
         return OffsetDateTime.now(UTC)
                 .minus(Duration.ofHours(1))

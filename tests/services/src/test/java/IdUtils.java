@@ -1,3 +1,4 @@
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class IdUtils {
@@ -15,5 +16,9 @@ public class IdUtils {
     public static String randomString() {
         long random = ThreadLocalRandom.current().nextLong(0, MILLION);
         return String.format("%06d", random);
+    }
+
+    public static String randomUuid() {
+        return UUID.randomUUID().toString();
     }
 }
