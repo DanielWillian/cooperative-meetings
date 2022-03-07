@@ -26,6 +26,9 @@ voteParams.tags = { name: 'vote' }
 export let options = {
   vus: 5,
   iterations: 100,
+  thresholds: {
+    'http_req_duration{name:"vote"}' : ['p(95) < 100']
+  }
 }
 
 export function setup() {
