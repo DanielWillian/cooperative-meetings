@@ -13,7 +13,7 @@ SUPPORTING_FILES := $(PROJECT_DIR)pom.xml $(PROJECT_DIR)makefile $(TEST_UTILS_SC
 K6_SCRIPT := $(PROJECT_DIR)tests/load-balance/vote-api.js
 
 .SUFFIXES:
-.PHONY: app-jar build test deploy undeploy deploy-test stress deploy-test-all deploy-test-all-linux check integration-test
+.PHONY: app-jar build test deploy undeploy deploy-test stress stress-linux deploy-test-all deploy-test-all-linux check integration-test
 .DELETE_ON_ERROR:
 
 $(WEB_APP_JAR): $(SRC_FILES) $(SUPPORTING_FILES)
@@ -32,6 +32,9 @@ deploy undeploy deploy-test stress deploy-test-all: $(WEB_APP_JAR)
 
 deploy-test-all-linux: $(WEB_APP_JAR)
 	$(TEST_UTILS_SCRIPT) -j $(WEB_APP_JAR) -d $(TEST_DOCKER_COMPOSE) -k $(K6_SCRIPT) -l deploy-test-all
+
+stress-linux:
+	$(TEST_UTILS_SCRIPT) -k $(K6_SCRIPT) -l stress
 
 check:
 	$(TEST_UTILS_SCRIPT) $@

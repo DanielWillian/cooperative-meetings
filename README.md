@@ -2,15 +2,12 @@
 
 cooperative-meetings is a demo app exposing REST APIs for managing meetings of a cooperative.
 
-It uses OpenAPI as specification and implements it using Spring Boot.
+Implemented with Spring Boot using WebFlux for handling requests, but the app is not fully reactive. APIs are documented with OpenAPI.
 
 Current features available:
 
 - CRUD operations for subjects
 - CRUD operations for polls of subjects
-
-Features to be introduced:
-
 - CRUD operations for voting on polls of subjects
 
 ## Requirements
@@ -41,6 +38,9 @@ Conveniently there are utilities that automate running integration tests, these 
 To create the app jar run `mvn clean install`. This creates the jar at `target` of `:web-app` module
 as well as a zip at `target` of `:integration-test` containing the jar and a docker compose file
 to deploy a playground with PostgreSQL.
+
+## Running
+Run `make deploy` to have get the application running, information about APIs available can be found at `http://localhost:8080/swagger-ui.html`. Run the integration tests with `make integration-test`. Run stress test with `make stress` or `make stress-linux` if running on linux. To undeploy the application, run `make undeploy`
 
 ## Testing
 To run the integration tests execute:
