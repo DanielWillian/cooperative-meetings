@@ -16,6 +16,7 @@
   <modules>
     <module>subject-stubs</module>
     <module>poll-stubs</module>
+    <module>vote-stubs</module>
   </modules>
 
 </project>

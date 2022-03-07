@@ -94,6 +94,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.company.demo</groupId>
+        <artifactId>vote-infrastructure</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.openapitools</groupId>
         <artifactId>jackson-databind-nullable</artifactId>
         <version>${jackson.databind.nullable.version}</version>
