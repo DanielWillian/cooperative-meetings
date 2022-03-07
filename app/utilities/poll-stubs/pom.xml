@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.company.demo</groupId>
     <artifactId>cooperative-meetings-utilities</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.5</version>
   </parent>
 
   <artifactId>poll-stubs</artifactId>
