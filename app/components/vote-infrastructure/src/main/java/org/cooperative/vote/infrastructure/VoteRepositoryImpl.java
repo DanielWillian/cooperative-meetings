@@ -4,11 +4,13 @@ import org.cooperative.poll.exception.PollNotFoundException;
 import org.cooperative.poll.jpa.Poll;
 import org.cooperative.poll.jpa.PollRepositoryJpa;
 import org.cooperative.vote.Vote;
+import org.cooperative.vote.VoteCount;
 import org.cooperative.vote.VoteRepository;
 import org.cooperative.vote.jpa.VoteRepositoryJpa;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -39,6 +41,22 @@ public class VoteRepositoryImpl implements VoteRepository {
     public Optional<Vote> getVoteBySubjectIdPollIdVoter(long subjectId, long pollId, UUID voter) {
         return voteRepository.findByPoll_Subject_IdAndPoll_IdAndVoter(subjectId, pollId, voter)
                 .map(this::toDomain);
+    }
+
+    @Override
+    public VoteCount getVoteCountForPoll(long subjectId, long pollId) {
+        List<org.cooperative.vote.jpa.VoteCount> voteCount = voteRepository.countVotes(subjectId, pollId);
+        long agreeCount = voteCount.stream()
+                .filter(org.cooperative.vote.jpa.VoteCount::isAgree)
+                .findAny()
+                .map(org.cooperative.vote.jpa.VoteCount::getCount)
+                .orElse(0L);
+        long disagreeCount = voteCount.stream()
+                .filter(v -> !v.isAgree())
+                .findAny()
+                .map(org.cooperative.vote.jpa.VoteCount::getCount)
+                .orElse(0L);
+        return VoteCount.of(agreeCount, disagreeCount);
     }
 
     private Vote toDomain(org.cooperative.vote.jpa.Vote vote) {

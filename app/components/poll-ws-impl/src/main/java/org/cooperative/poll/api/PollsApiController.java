@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.cooperative.poll.Poll;
 import org.cooperative.poll.PollService;
 import org.cooperative.poll.exception.PollNotFoundException;
+import org.cooperative.vote.VoteCount;
+import org.cooperative.vote.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +32,12 @@ import java.util.stream.Stream;
 public class PollsApiController {
 
     private final PollService pollService;
+    private final VoteService voteService;
 
     @Autowired
-    public PollsApiController(PollService pollService) {
+    public PollsApiController(PollService pollService, VoteService voteService) {
         this.pollService = pollService;
+        this.voteService = voteService;
     }
 
     @GetMapping
@@ -87,20 +91,22 @@ public class PollsApiController {
     }
 
     @GetMapping("/{pollId}")
-    public Mono<PollResponse> getPollById(@PathVariable("subjectId") long subjectId,
+    public Mono<PollVotesResponse> getPollById(@PathVariable("subjectId") long subjectId,
             @PathVariable("pollId") long pollId) {
         log.info("Received get poll of subject: {}, poll: {}", subjectId, pollId);
-        return Mono.defer(() -> getPollByIdFromService(subjectId, pollId))
-                .map(PollResponse::fromDomain);
+        return Mono.defer(() -> getPollByIdFromService(subjectId, pollId));
     }
 
-    private Mono<Poll> getPollByIdFromService(long subjectId, long pollId) {
+    private Mono<PollVotesResponse> getPollByIdFromService(long subjectId, long pollId) {
         log.trace("ENTRY - get poll by id from service, subjectId: {}, pollId: {}", subjectId, pollId);
         Mono<Poll> poll = Mono.fromCallable(() -> pollService.getPollByIdAndSubjectId(pollId, subjectId)
                         .orElseThrow(PollNotFoundException::new))
                 .subscribeOn(Schedulers.boundedElastic());
+        Mono<VoteCount> voteCount = Mono.fromCallable(() -> voteService.getVoteCountForPoll(subjectId, pollId))
+                .subscribeOn(Schedulers.boundedElastic());
+        Mono<PollVotesResponse> response = Mono.zip(poll, voteCount, PollVotesResponse::fromDomain);
         log.trace("EXIT - get poll by id from service, subjectId: {}, pollId: {}", subjectId, pollId);
-        return poll;
+        return response;
     }
 
     @DeleteMapping("/{pollId}")

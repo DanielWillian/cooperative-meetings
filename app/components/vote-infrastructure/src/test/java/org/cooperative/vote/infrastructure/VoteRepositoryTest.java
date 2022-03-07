@@ -4,6 +4,7 @@ import org.cooperative.poll.jpa.Poll;
 import org.cooperative.poll.jpa.PollRepositoryJpa;
 import org.cooperative.subject.jpa.Subject;
 import org.cooperative.vote.Vote;
+import org.cooperative.vote.VoteCount;
 import org.cooperative.vote.jpa.VoteRepositoryJpa;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,9 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
@@ -62,5 +63,14 @@ class VoteRepositoryTest {
         voteRepository.getVoteBySubjectIdPollIdVoter(1L, 1L, uuid);
         verify(voteRepositoryJpa, times(1))
                 .findByPoll_Subject_IdAndPoll_IdAndVoter(1L, 1L, uuid);
+    }
+
+    @Test
+    void testGetVoteCountForPoll() {
+        when(voteRepositoryJpa.countVotes(1L, 1L))
+                .thenReturn(List.of(VoteCountImpl.of(true, 2), VoteCountImpl.of(false, 1)));
+        VoteCount voteCount = voteRepository.getVoteCountForPoll(1L, 1L);
+        assertEquals(2, voteCount.getAgree());
+        assertEquals(1, voteCount.getDisagree());
     }
 }

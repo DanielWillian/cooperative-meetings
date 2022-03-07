@@ -67,4 +67,12 @@ public class VoteServiceImpl implements VoteService {
         log.trace("EXIT - get vote subjectId: {}, pollId: {}, voter: {}", subjectId, pollId, voter);
         return vote;
     }
+
+    @Override
+    public VoteCount getVoteCountForPoll(long subjectId, long pollId) {
+        log.trace("BEGIN - get vote count subjectId: {}, pollId: {}", subjectId, pollId);
+        VoteCount voteCount = voteRepository.getVoteCountForPoll(subjectId, pollId);
+        log.trace("EXIT - get vote count subjectId: {}, pollId: {}", subjectId, pollId);
+        return voteCount;
+    }
 }

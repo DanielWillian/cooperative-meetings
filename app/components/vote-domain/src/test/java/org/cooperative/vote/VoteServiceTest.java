@@ -108,4 +108,11 @@ class VoteServiceTest {
         verify(voteRepository, times(1))
                 .getVoteBySubjectIdPollIdVoter(2L, 1L, uuid);
     }
+
+    @Test
+    void testGetVoteCountForPoll() {
+        voteService.getVoteCountForPoll(2L, 1L);
+        verify(voteRepository, times(1))
+                .getVoteCountForPoll(2L, 1L);
+    }
 }

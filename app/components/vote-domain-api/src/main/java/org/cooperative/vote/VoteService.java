@@ -12,4 +12,5 @@ public interface VoteService {
     Stream<Vote> getVoteBySubjectIdPollId(long subjectId, long pollId) throws VoteNotFoundException;
     Optional<Vote> getVoteBySubjectIdPollIdVoter(long subjectId, long pollId, UUID voter)
             throws VoteNotFoundException;
+    VoteCount getVoteCountForPoll(long subjectId, long pollId);
 }

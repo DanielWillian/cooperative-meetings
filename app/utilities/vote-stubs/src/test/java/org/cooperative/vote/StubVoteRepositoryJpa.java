@@ -1,6 +1,7 @@
 package org.cooperative.vote;
 
 import org.cooperative.vote.jpa.Vote;
+import org.cooperative.vote.jpa.VoteCount;
 import org.cooperative.vote.jpa.VoteRepositoryJpa;
 
 import java.util.ArrayList;
@@ -26,6 +27,15 @@ public class StubVoteRepositoryJpa implements VoteRepositoryJpa {
                 .filter(v -> v.getPoll().getSubject().getId() == subjectId && v.getPoll().getId() == pollId &&
                         v.getVoter().equals(voter))
                 .findAny();
+    }
+
+    @Override
+    public List<VoteCount> countVotes(long subjectId, long pollId) {
+        List<VoteCount> voteCounts = new ArrayList<>();
+        List<Vote> votesOnPoll = findByPoll_Subject_IdAndPoll_Id(subjectId, pollId);
+        voteCounts.add(VoteCountImpl.of(true, votesOnPoll.stream().filter(Vote::isAgree).count()));
+        voteCounts.add(VoteCountImpl.of(false, votesOnPoll.stream().filter(v -> !v.isAgree()).count()));
+        return voteCounts;
     }
 
     @Override

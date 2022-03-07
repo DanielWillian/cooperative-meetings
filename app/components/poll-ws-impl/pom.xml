@@ -18,6 +18,10 @@
       <artifactId>poll-domain-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>vote-domain-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webflux</artifactId>
     </dependency>
@@ -42,7 +46,17 @@
     </dependency>
     <dependency>
       <groupId>org.company.demo</groupId>
+      <artifactId>vote-infrastructure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
       <artifactId>subject-domain</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>vote-domain</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -54,6 +68,12 @@
     <dependency>
       <groupId>org.company.demo</groupId>
       <artifactId>poll-stubs</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.company.demo</groupId>
+      <artifactId>vote-stubs</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

@@ -15,6 +15,13 @@ import org.cooperative.subject.SubjectService;
 import org.cooperative.subject.SubjectServiceDefault;
 import org.cooperative.subject.infrastructure.SubjectRepositoryImpl;
 import org.cooperative.subject.jpa.SubjectRepositoryJpa;
+import org.cooperative.vote.StubVoteRepositoryJpa;
+import org.cooperative.vote.Vote;
+import org.cooperative.vote.VoteRepository;
+import org.cooperative.vote.VoteService;
+import org.cooperative.vote.VoteServiceImpl;
+import org.cooperative.vote.infrastructure.VoteRepositoryImpl;
+import org.cooperative.vote.jpa.VoteRepositoryJpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +39,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -55,10 +63,16 @@ public class PollsApiTest {
     private PollService service;
 
     @Autowired
+    private VoteService voteService;
+
+    @Autowired
     private StubPollRepositoryJpa stubPollRepository;
 
     @Autowired
     private StubSubjectRepositoryJpa stubSubjectRepository;
+
+    @Autowired
+    private StubVoteRepositoryJpa stubVoteRepositoryJpa;
 
     @Autowired
     private SubjectService SubjectService;
@@ -71,8 +85,23 @@ public class PollsApiTest {
     @Configuration
     public static class TestConfig {
         @Bean
-        public PollsApiController pollsApiController(PollService service) {
-            return new PollsApiController(service);
+        public PollsApiController pollsApiController(PollService service, VoteService voteService) {
+            return new PollsApiController(service, voteService);
+        }
+
+        @Bean
+        public VoteService voteService(VoteRepository voteRepository, PollService pollService) {
+            return new VoteServiceImpl(voteRepository, pollService);
+        }
+
+        @Bean
+        public VoteRepository voteRepository(VoteRepositoryJpa voteRepositoryJpa, PollRepositoryJpa pollRepositoryJpa) {
+            return new VoteRepositoryImpl(voteRepositoryJpa, pollRepositoryJpa);
+        }
+
+        @Bean
+        public VoteRepositoryJpa voteRepositoryJpa() {
+            return new StubVoteRepositoryJpa();
         }
 
         @Bean
@@ -116,6 +145,7 @@ public class PollsApiTest {
     public void afterTest() {
         stubPollRepository.deleteAll();
         stubSubjectRepository.deleteAll();
+        stubVoteRepositoryJpa.deleteAll();
     }
 
     @Test
@@ -282,17 +312,44 @@ public class PollsApiTest {
         SubjectService.createSubject(Subject.of(1L, "subject"));
         service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
 
-        PollResponse pollResponse = webTestClient.get()
+        PollVotesResponse pollResponse = webTestClient.get()
                 .uri(URI.create("/subjects/1/polls/1"))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .returnResult(PollResponse.class)
+                .returnResult(PollVotesResponse.class)
                 .getResponseBody()
                 .blockFirst();
         assertEquals(1L, pollResponse.getId());
         assertEquals("poll", pollResponse.getName());
         assertEquals(endTime, pollResponse.getEndDate());
+        assertEquals(0, pollResponse.getVotes().getAgree());
+        assertEquals(0, pollResponse.getVotes().getDisagree());
+    }
+
+    @Test
+    public void testGetPollSuccessWithVotes() throws Exception {
+        SubjectService.createSubject(Subject.of(1L, "subject"));
+        OffsetDateTime startTime = OffsetDateTime.now();
+        OffsetDateTime endTime = startTime.plus(Duration.ofMinutes(1));
+        service.createPoll(Poll.of(1L, "poll", startTime, endTime, 1L));
+        voteService.createVote(Vote.of(UUID.fromString("c3ebfe9d-eb65-4391-83d4-b9bf69c83672"), false, null, 1L, 1L));
+        voteService.createVote(Vote.of(UUID.fromString("e6a3599c-e003-47d4-a63a-75bc6f530154"), true, null, 1L, 1L));
+        voteService.createVote(Vote.of(UUID.fromString("c57117f9-0031-4f92-ae39-ff7198613ff4"), true, null, 1L, 1L));
+
+        PollVotesResponse pollResponse = webTestClient.get()
+                .uri(URI.create("/subjects/1/polls/1"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(PollVotesResponse.class)
+                .getResponseBody()
+                .blockFirst();
+        assertEquals(1L, pollResponse.getId());
+        assertEquals("poll", pollResponse.getName());
+        assertTrue(endTime.isEqual(pollResponse.getEndDate()));
+        assertEquals(2, pollResponse.getVotes().getAgree());
+        assertEquals(1, pollResponse.getVotes().getDisagree());
     }
 
     @Test
