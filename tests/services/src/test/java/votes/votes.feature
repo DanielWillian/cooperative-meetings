@@ -63,6 +63,20 @@ Feature: Tests for votes APIs
     * method post
     Then status 409
 
+  Scenario: Check votes on poll
+    * call read('../polls/create-subject.feature')
+    * call read('create-poll.feature')
+    * call read('create-vote.feature')
+    * call read('create-vote.feature')
+    * call read('create-vote.feature')
+    * call read('create-vote.feature')
+    * call read('create-vote.feature')
+    When path 'subjects', subjectId, 'polls', pollId
+    * method get
+    Then status 200
+    * match response $.votes.agree == 5
+    * match response $.votes.disagree == 0
+
   Scenario: Get all votes of poll
     * call read('../polls/create-subject.feature')
     * call read('create-poll.feature')
