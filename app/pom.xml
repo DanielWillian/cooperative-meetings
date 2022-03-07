@@ -105,6 +105,11 @@
       </dependency>
       <dependency>
         <groupId>org.company.demo</groupId>
+        <artifactId>vote-ws-impl</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.company.demo</groupId>
         <artifactId>vote-stubs</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
