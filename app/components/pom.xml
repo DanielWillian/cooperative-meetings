@@ -23,6 +23,7 @@
     <module>poll-infrastructure</module>
     <module>poll-ws-impl</module>
     <module>vote-domain-api</module>
+    <module>vote-domain</module>
   </modules>
 
 </project>
